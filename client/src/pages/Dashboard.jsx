@@ -1,19 +1,59 @@
 import DashboardLayout from "../layouts/DashboardLayout";
+import { motion } from "framer-motion";
+
 import StatCard from "../components/dashboard/StatCard";
+import RevenueChart from "../components/dashboard/RevenueChart";
+import RevenuePieChart from "../components/dashboard/RevenuePieChart";
+import CustomerPieChart from "../components/dashboard/CustomerPieChart";
+import RecentActivity from "../components/dashboard/RecentActivity";
+import QuickActions from "../components/dashboard/QuickActions";
 
 import {
-  DollarSign,
+  IndianRupee,
   Users,
-  UserPlus,
-  CheckSquare,
+  FileText,
+  Clock3,
 } from "lucide-react";
 
+import { getDashboardStats } from "../lib/dashboardData";
+
 export default function Dashboard() {
+  const stats = getDashboardStats();
+
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: {
+      opacity: 0,
+      y: 20,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.45,
+      },
+    },
+  };
+
   return (
     <DashboardLayout title="Dashboard">
-      <div className="space-y-8">
+      <motion.div
+        className="space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Header */}
 
-        <div>
+        <motion.div variants={itemVariants}>
           <h1 className="text-4xl font-bold text-slate-800">
             Dashboard
           </h1>
@@ -21,49 +61,77 @@ export default function Dashboard() {
           <p className="mt-2 text-slate-500">
             Welcome back 👋 Here's what's happening today.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+        {/* Stats */}
 
+        <motion.div
+          variants={itemVariants}
+          className="grid gap-6 md:grid-cols-2 xl:grid-cols-4"
+        >
           <StatCard
             title="Revenue"
-            value="₹4,25,000"
-            subtitle="This Month"
-            change="+18%"
+            value={`₹${stats.totalRevenue.toLocaleString()}`}
+            subtitle="Total Revenue"
+            change={`${stats.paidInvoices} Paid`}
             color="bg-gradient-to-r from-blue-600 to-indigo-700"
-            icon={<DollarSign size={30} />}
+            icon={<IndianRupee size={30} />}
           />
 
           <StatCard
             title="Customers"
-            value="1,248"
-            subtitle="Active Customers"
-            change="+12%"
+            value={stats.totalCustomers}
+            subtitle={`${stats.activeCustomers} Active`}
+            change={`${stats.inactiveCustomers} Inactive`}
             color="bg-gradient-to-r from-emerald-500 to-green-600"
             icon={<Users size={30} />}
           />
 
           <StatCard
-            title="Leads"
-            value="327"
-            subtitle="New Leads"
-            change="+8%"
+            title="Invoices"
+            value={stats.totalInvoices}
+            subtitle={`${stats.paidInvoices} Paid`}
+            change={`${stats.pendingInvoices} Pending`}
             color="bg-gradient-to-r from-orange-500 to-red-500"
-            icon={<UserPlus size={30} />}
+            icon={<FileText size={30} />}
           />
 
           <StatCard
-            title="Tasks"
-            value="19"
-            subtitle="Pending Tasks"
-            change="-3%"
-            color="bg-gradient-to-r from-purple-600 to-pink-600"
-            icon={<CheckSquare size={30} />}
+            title="Pending Revenue"
+            value={`₹${stats.pendingRevenue.toLocaleString()}`}
+            subtitle="Awaiting Payment"
+            change={`${stats.pendingInvoices} Invoices`}
+            color="bg-gradient-to-r from-violet-600 to-pink-600"
+            icon={<Clock3 size={30} />}
           />
+        </motion.div>
 
-        </div>
+        {/* Charts */}
 
-      </div>
+        <motion.div
+          variants={itemVariants}
+          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+        >
+          <div className="xl:col-span-2">
+            <RevenueChart />
+          </div>
+
+          <RevenuePieChart />
+        </motion.div>
+
+        {/* Bottom Section */}
+
+        <motion.div
+          variants={itemVariants}
+          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+        >
+          <CustomerPieChart />
+
+          <RecentActivity />
+
+          <QuickActions />
+        </motion.div>
+      </motion.div>
     </DashboardLayout>
   );
 }

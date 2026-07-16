@@ -1,8 +1,12 @@
 import CustomerRow from "./CustomerRow";
 
-export default function CustomerTable({ customers }) {
+export default function CustomerTable({
+  customers,
+  onEdit,
+  onDelete,
+}) {
   return (
-    <div className="bg-white rounded-2xl shadow border overflow-hidden">
+    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
 
       <div className="overflow-x-auto">
 
@@ -17,7 +21,7 @@ export default function CustomerTable({ customers }) {
               </th>
 
               <th className="text-left px-6 py-4">
-                Company
+                Project
               </th>
 
               <th className="text-left px-6 py-4">
@@ -32,7 +36,7 @@ export default function CustomerTable({ customers }) {
                 Status
               </th>
 
-              <th className="text-left px-6 py-4">
+              <th className="text-center px-6 py-4">
                 Actions
               </th>
 
@@ -42,22 +46,30 @@ export default function CustomerTable({ customers }) {
 
           <tbody>
 
-            {customers.length > 0 ? (
-              customers.map((customer) => (
-                <CustomerRow
-                  key={customer.id}
-                  customer={customer}
-                />
-              ))
-            ) : (
+            {customers.length === 0 ? (
+
               <tr>
+
                 <td
                   colSpan="6"
                   className="text-center py-10 text-gray-500"
                 >
-                  No customers found.
+                  No Customers Found
                 </td>
+
               </tr>
+
+            ) : (
+
+              customers.map((customer) => (
+                <CustomerRow
+                  key={customer.id}
+                  customer={customer}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ))
+
             )}
 
           </tbody>

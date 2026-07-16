@@ -1,14 +1,68 @@
-const express=require("express");
-const cors=require("cors");
+const express = require("express");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
-const app=express();
+/* ===========================================================
+   Route Imports
+=========================================================== */
 
-app.use(cors());
+const authRoutes = require("./routes/authRoutes");
 
+/* ===========================================================
+   Initialize App
+=========================================================== */
+
+const app = express();
+
+/* ===========================================================
+   Middleware
+=========================================================== */
+
+// Enable CORS
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
+// Parse JSON
 app.use(express.json());
 
-app.get("/",(req,res)=>{
-    res.send("CRM API Running");
+// Parse URL Encoded Data
+app.use(express.urlencoded({ extended: true }));
+
+// Parse Cookies
+app.use(cookieParser());
+
+/* ===========================================================
+   API Routes
+=========================================================== */
+
+// Authentication Routes
+app.use("/api/auth", authRoutes);
+
+/* ===========================================================
+   Health Check Route
+=========================================================== */
+
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Brandspire CRM Backend is running successfully 🚀",
+  });
 });
 
-module.exports=app;
+/* ===========================================================
+   404 Handler
+=========================================================== */
+
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "API route not found.",
+  });
+});
+
+module.exports = app;

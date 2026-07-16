@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,14 +14,56 @@ export default function AddCustomerDialog({
   open,
   onClose,
   addCustomer,
+  updateCustomer,
+  selectedCustomer,
+  isEditMode,
 }) {
-  const [form, setForm] = useState({
+  const emptyForm = {
+    id: null,
+
     name: "",
-    company: "",
+
+    project: "",
+
     email: "",
+
     phone: "",
+
+    address: "",
+
+    city: "",
+
+    state: "",
+
+    country: "",
+
+    pincode: "",
+
+    website: "",
+
+    gst: "",
+
+    revenue: 0,
+
+    notes: "",
+
     status: "Active",
-  });
+  };
+
+  const [form, setForm] = useState(emptyForm);
+
+  useEffect(() => {
+    if (open) {
+      if (isEditMode && selectedCustomer) {
+        setForm({
+          ...emptyForm,
+          ...selectedCustomer,
+        });
+      } else {
+        setForm(emptyForm);
+      }
+    }
+  }, [open, isEditMode, selectedCustomer]);
 
   function handleChange(e) {
     setForm({
@@ -31,79 +73,214 @@ export default function AddCustomerDialog({
   }
 
   function handleSubmit(e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  addCustomer(form);
+    if (
+      !form.name ||
+      !form.project ||
+      !form.email ||
+      !form.phone
+    ) {
+      alert("Please fill all required fields.");
+      return;
+    }
 
-  setForm({
-    name: "",
-    company: "",
-    email: "",
-    phone: "",
-    status: "Active",
-  });
+    if (isEditMode) {
+      updateCustomer(form);
+    } else {
+      addCustomer(form);
+    }
 
-  onClose();
-}
+    setForm(emptyForm);
+    onClose();
+  }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        if (!value) onClose();
+      }}
+    >
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
 
         <DialogHeader>
-          <DialogTitle>
-            Add New Customer
+          <DialogTitle className="text-2xl font-bold">
+            {isEditMode ? "Edit Customer" : "Add New Customer"}
           </DialogTitle>
         </DialogHeader>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4"
+          className="space-y-6"
         >
 
-          <input
-            name="name"
-            placeholder="Customer Name"
-            className="w-full border rounded-xl p-3"
-            value={form.name}
-            onChange={handleChange}
-          />
+          {/* Basic Information */}
 
-          <input
-            name="company"
-            placeholder="Company"
-            className="w-full border rounded-xl p-3"
-            value={form.company}
-            onChange={handleChange}
-          />
+          <div>
 
-          <input
-            name="email"
-            placeholder="Email"
-            className="w-full border rounded-xl p-3"
-            value={form.email}
-            onChange={handleChange}
-          />
+            <h3 className="text-lg font-semibold mb-4">
+              Basic Information
+            </h3>
 
-          <input
-            name="phone"
-            placeholder="Phone"
-            className="w-full border rounded-xl p-3"
-            value={form.phone}
-            onChange={handleChange}
-          />
+            <div className="grid md:grid-cols-2 gap-4">
 
-          <select
-            name="status"
-            className="w-full border rounded-xl p-3"
-            value={form.status}
-            onChange={handleChange}
-          >
-            <option>Active</option>
-            <option>Inactive</option>
-          </select>
+              <input
+                name="name"
+                placeholder="Customer Name *"
+                value={form.name}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
 
-          <DialogFooter>
+              <input
+                name="project"
+                placeholder="Project Name *"
+                value={form.project}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
+
+              <input
+                type="email"
+                name="email"
+                placeholder="Email *"
+                value={form.email}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
+
+              <input
+                name="phone"
+                placeholder="Phone *"
+                value={form.phone}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
+
+            </div>
+
+          </div>
+
+          {/* Address */}
+
+          <div>
+
+            <h3 className="text-lg font-semibold mb-4">
+              Address
+            </h3>
+
+            <div className="space-y-4">
+
+              <textarea
+                name="address"
+                placeholder="Full Address"
+                value={form.address}
+                onChange={handleChange}
+                rows={3}
+                className="w-full rounded-xl border p-3 resize-none"
+              />
+
+              <div className="grid md:grid-cols-2 gap-4">
+
+                <input
+                  name="city"
+                  placeholder="City"
+                  value={form.city}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border p-3"
+                />
+
+                <input
+                  name="state"
+                  placeholder="State"
+                  value={form.state}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border p-3"
+                />
+
+                <input
+                  name="country"
+                  placeholder="Country"
+                  value={form.country}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border p-3"
+                />
+
+                <input
+                  name="pincode"
+                  placeholder="Pincode"
+                  value={form.pincode}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border p-3"
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* Business Details */}
+
+          <div>
+
+            <h3 className="text-lg font-semibold mb-4">
+              Business Details
+            </h3>
+
+            <div className="grid md:grid-cols-2 gap-4">
+
+              <input
+                name="website"
+                placeholder="Website"
+                value={form.website}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
+
+              <input
+                name="gst"
+                placeholder="GST Number"
+                value={form.gst}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              />
+
+              <select
+                name="status"
+                value={form.status}
+                onChange={handleChange}
+                className="w-full rounded-xl border p-3"
+              >
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+
+            </div>
+
+          </div>
+
+          {/* Notes */}
+
+          <div>
+
+            <h3 className="text-lg font-semibold mb-4">
+              Additional Notes
+            </h3>
+
+            <textarea
+              name="notes"
+              placeholder="Write notes about this customer..."
+              value={form.notes}
+              onChange={handleChange}
+              rows={5}
+              className="w-full rounded-xl border p-3 resize-none"
+            />
+
+          </div>
+
+          <DialogFooter className="pt-4">
 
             <Button
               type="button"
@@ -114,7 +291,11 @@ export default function AddCustomerDialog({
             </Button>
 
             <Button type="submit">
-              Save Customer
+
+              {isEditMode
+                ? "Update Customer"
+                : "Save Customer"}
+
             </Button>
 
           </DialogFooter>

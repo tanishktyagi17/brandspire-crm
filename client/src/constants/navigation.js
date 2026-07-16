@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   Users,
+  FileText,
   UserPlus,
   CheckSquare,
   Settings,
@@ -16,6 +17,11 @@ export const navigation = [
     title: "Customers",
     icon: Users,
     path: "/customers",
+  },
+  {
+    title: "Invoices",
+    icon: FileText,
+    path: "/invoices",
   },
   {
     title: "Leads",

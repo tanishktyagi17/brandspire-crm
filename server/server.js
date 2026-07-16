@@ -12,5 +12,9 @@ mongoose
     });
   })
   .catch((err) => {
-    console.log(err);
-  });
+  console.error("❌ MongoDB Connection Error");
+  console.error("Name:", err.name);
+  console.error("Message:", err.message);
+  console.error("Code:", err.code);
+  console.error("Full Error:", err);
+});
