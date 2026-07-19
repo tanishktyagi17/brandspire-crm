@@ -20,25 +20,25 @@ export default function StatCard({
         scale: 1.02,
       }}
       transition={{
-        duration: 0.35,
+        duration: 0.3,
       }}
       className="
         relative
         overflow-hidden
-        rounded-3xl
+        rounded-2xl
+        lg:rounded-3xl
+        bg-white/90
+        backdrop-blur-xl
         border
         border-slate-200/70
-        bg-white/90
-        p-4
         shadow-lg
-        backdrop-blur-xl
-        transition-all
         hover:shadow-2xl
-        sm:p-5
+
+        p-4
         lg:p-6
       "
     >
-      {/* Decorative Background */}
+      {/* Background Glow */}
       <div
         className={`
           absolute
@@ -46,11 +46,11 @@ export default function StatCard({
           -top-10
           h-28
           w-28
+          lg:h-36
+          lg:w-36
           rounded-full
           opacity-10
           blur-2xl
-          lg:h-36
-          lg:w-36
           ${color}
         `}
       />
@@ -58,17 +58,17 @@ export default function StatCard({
       {/* Top */}
       <div className="relative flex items-start justify-between">
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
 
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 sm:text-sm">
+          <p className="text-[11px] lg:text-sm font-bold uppercase tracking-wider text-slate-500">
             {title}
           </p>
 
-          <h2 className="mt-2 break-words text-2xl font-extrabold text-slate-800 sm:text-3xl lg:text-4xl">
+          <h2 className="mt-2 text-3xl lg:text-4xl font-extrabold text-slate-800 break-words">
             {value}
           </h2>
 
-          <p className="mt-1 text-xs text-slate-500 sm:text-sm">
+          <p className="mt-1 text-xs lg:text-sm text-slate-500">
             {subtitle}
           </p>
 
@@ -76,20 +76,18 @@ export default function StatCard({
 
         <div
           className={`
-            ml-3
             flex
             h-12
             w-12
-            shrink-0
-            items-center
-            justify-center
-            rounded-2xl
-            text-white
-            shadow-lg
-            sm:h-14
-            sm:w-14
             lg:h-16
             lg:w-16
+            items-center
+            justify-center
+            rounded-xl
+            lg:rounded-2xl
+            text-white
+            shadow-lg
+            shrink-0
             ${color}
           `}
         >
@@ -99,21 +97,23 @@ export default function StatCard({
       </div>
 
       {/* Bottom */}
-      <div className="relative mt-4 flex items-center justify-between gap-3 lg:mt-6">
+
+      <div className="relative mt-4 lg:mt-6">
 
         <div
           className={`
-            flex
+            inline-flex
             items-center
-            gap-1.5
+            gap-1
             rounded-full
             px-2.5
             py-1
+            lg:px-3
+            lg:py-1.5
             text-xs
+            lg:text-sm
             font-semibold
-            sm:px-3
-            sm:py-1.5
-            sm:text-sm
+
             ${
               positive
                 ? "bg-emerald-100 text-emerald-700"
@@ -130,14 +130,15 @@ export default function StatCard({
           {change}
         </div>
 
-        <span className="hidden text-xs text-slate-400 lg:block">
+        <span className="hidden lg:block mt-3 text-xs text-slate-400">
           Compared to last month
         </span>
 
       </div>
 
       {/* Progress */}
-      <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100 lg:mt-6">
+
+      <div className="mt-4 lg:mt-6 h-1 lg:h-1.5 overflow-hidden rounded-full bg-slate-100">
 
         <motion.div
           initial={{ width: 0 }}
@@ -145,8 +146,7 @@ export default function StatCard({
             width: positive ? "82%" : "38%",
           }}
           transition={{
-            duration: 1.2,
-            ease: "easeOut",
+            duration: 1,
           }}
           className={`h-full rounded-full ${color}`}
         />

@@ -18,21 +18,21 @@ const COLORS = [
 
 export default function CustomerPieChart() {
   return (
-    <div className="rounded-3xl border bg-white p-4 shadow-xl sm:p-5 lg:p-6">
+    <div className="rounded-2xl lg:rounded-3xl border bg-white shadow-xl p-4 lg:p-6">
 
       {/* Header */}
 
-      <h2 className="text-lg font-bold text-slate-800 sm:text-xl lg:text-2xl">
+      <h2 className="text-lg lg:text-2xl font-bold text-slate-800">
         Customer Status
       </h2>
 
-      <p className="mt-1 mb-4 text-xs text-slate-500 sm:mb-5 sm:text-sm lg:mb-6 lg:text-base">
+      <p className="mt-1 text-xs lg:text-base text-slate-500">
         Distribution of customer categories.
       </p>
 
       {/* Chart */}
 
-      <div className="h-56 sm:h-64 lg:h-80">
+      <div className="mt-4 h-52 sm:h-60 lg:h-80">
 
         <ResponsiveContainer width="100%" height="100%">
 
@@ -42,10 +42,9 @@ export default function CustomerPieChart() {
               data={customerStatusData}
               dataKey="value"
               nameKey="name"
-              outerRadius={window.innerWidth < 640 ? 70 : 100}
-              label={({ percent }) =>
-                `${(percent * 100).toFixed(0)}%`
-              }
+              innerRadius={40}
+              outerRadius={70}
+              paddingAngle={3}
             >
               {customerStatusData.map((entry, index) => (
                 <Cell
@@ -65,7 +64,7 @@ export default function CustomerPieChart() {
 
       {/* Legend */}
 
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-5">
+      <div className="mt-4 space-y-2">
 
         {customerStatusData.map((item, index) => (
 
@@ -84,13 +83,13 @@ export default function CustomerPieChart() {
                 }}
               />
 
-              <span className="text-sm text-slate-700">
+              <span className="text-sm lg:text-base text-slate-700">
                 {item.name}
               </span>
 
             </div>
 
-            <span className="text-sm font-semibold text-slate-700">
+            <span className="text-sm lg:text-base font-semibold text-slate-700">
               {item.value}
             </span>
 

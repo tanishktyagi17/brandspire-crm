@@ -7,26 +7,11 @@ import {
 } from "recharts";
 
 const data = [
-  {
-    name: "Website",
-    value: 45,
-  },
-  {
-    name: "Referral",
-    value: 20,
-  },
-  {
-    name: "Facebook",
-    value: 15,
-  },
-  {
-    name: "Instagram",
-    value: 10,
-  },
-  {
-    name: "Others",
-    value: 10,
-  },
+  { name: "Website", value: 45 },
+  { name: "Referral", value: 20 },
+  { name: "Facebook", value: 15 },
+  { name: "Instagram", value: 10 },
+  { name: "Others", value: 10 },
 ];
 
 const COLORS = [
@@ -39,21 +24,21 @@ const COLORS = [
 
 export default function RevenuePieChart() {
   return (
-    <div className="h-full rounded-3xl bg-white p-4 shadow-md sm:p-5 lg:p-6">
+    <div className="h-full rounded-2xl lg:rounded-3xl bg-white border shadow-xl p-4 lg:p-6">
 
       {/* Header */}
 
-      <h2 className="text-lg font-bold text-slate-800 sm:text-xl">
+      <h2 className="text-lg lg:text-2xl font-bold text-slate-800">
         Revenue Sources
       </h2>
 
-      <p className="mb-4 text-xs text-gray-500 sm:mb-6 sm:text-sm">
+      <p className="mt-1 text-xs lg:text-base text-slate-500">
         Income generated from different channels.
       </p>
 
       {/* Chart */}
 
-      <div className="h-56 sm:h-64 lg:h-72">
+      <div className="mt-4 h-52 sm:h-60 lg:h-72">
 
         <ResponsiveContainer width="100%" height="100%">
 
@@ -62,8 +47,8 @@ export default function RevenuePieChart() {
             <Pie
               data={data}
               dataKey="value"
-              innerRadius={45}
-              outerRadius={75}
+              innerRadius={40}
+              outerRadius={70}
               paddingAngle={3}
             >
               {data.map((entry, index) => (
@@ -84,7 +69,7 @@ export default function RevenuePieChart() {
 
       {/* Legend */}
 
-      <div className="mt-4 space-y-2 sm:space-y-3">
+      <div className="mt-4 space-y-2 lg:space-y-3">
 
         {data.map((item, index) => (
 
@@ -93,22 +78,22 @@ export default function RevenuePieChart() {
             className="flex items-center justify-between"
           >
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 lg:gap-3">
 
               <div
                 className="h-3 w-3 rounded-full"
                 style={{
-                  background: COLORS[index],
+                  backgroundColor: COLORS[index],
                 }}
               />
 
-              <span className="text-sm text-slate-700 sm:text-base">
+              <span className="text-sm lg:text-base text-slate-700">
                 {item.name}
               </span>
 
             </div>
 
-            <span className="text-sm font-semibold sm:text-base">
+            <span className="text-sm lg:text-base font-semibold">
               {item.value}%
             </span>
 

@@ -24,7 +24,7 @@ export default function Dashboard() {
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.08,
+        staggerChildren: 0.1,
       },
     },
   };
@@ -38,7 +38,7 @@ export default function Dashboard() {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.4,
+        duration: 0.45,
       },
     },
   };
@@ -46,19 +46,19 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <motion.div
+        className="space-y-6 lg:space-y-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="space-y-6 lg:space-y-8"
       >
         {/* Header */}
 
         <motion.div variants={itemVariants}>
-          <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl lg:text-4xl">
+          <h1 className="text-3xl lg:text-4xl font-bold text-slate-800">
             Dashboard
           </h1>
 
-          <p className="mt-1 text-sm text-slate-500 sm:mt-2 sm:text-base">
+          <p className="mt-2 text-base lg:text-lg text-slate-500">
             Welcome back 👋 Here's what's happening today.
           </p>
         </motion.div>
@@ -67,7 +67,7 @@ export default function Dashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 lg:gap-6"
+          className="grid grid-cols-2 gap-4 xl:grid-cols-4"
         >
           <StatCard
             title="Revenue"
@@ -75,7 +75,7 @@ export default function Dashboard() {
             subtitle="Total Revenue"
             change={`${stats.paidInvoices} Paid`}
             color="bg-gradient-to-r from-blue-600 to-indigo-700"
-            icon={<IndianRupee size={30} />}
+            icon={<IndianRupee size={28} />}
           />
 
           <StatCard
@@ -84,7 +84,7 @@ export default function Dashboard() {
             subtitle={`${stats.activeCustomers} Active`}
             change={`${stats.inactiveCustomers} Inactive`}
             color="bg-gradient-to-r from-emerald-500 to-green-600"
-            icon={<Users size={30} />}
+            icon={<Users size={28} />}
           />
 
           <StatCard
@@ -93,7 +93,7 @@ export default function Dashboard() {
             subtitle={`${stats.paidInvoices} Paid`}
             change={`${stats.pendingInvoices} Pending`}
             color="bg-gradient-to-r from-orange-500 to-red-500"
-            icon={<FileText size={30} />}
+            icon={<FileText size={28} />}
           />
 
           <StatCard
@@ -102,7 +102,7 @@ export default function Dashboard() {
             subtitle="Awaiting Payment"
             change={`${stats.pendingInvoices} Invoices`}
             color="bg-gradient-to-r from-violet-600 to-pink-600"
-            icon={<Clock3 size={30} />}
+            icon={<Clock3 size={28} />}
           />
         </motion.div>
 
@@ -110,7 +110,7 @@ export default function Dashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-3"
+          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
         >
           <div className="xl:col-span-2">
             <RevenueChart />
@@ -119,11 +119,11 @@ export default function Dashboard() {
           <RevenuePieChart />
         </motion.div>
 
-        {/* Bottom Section */}
+        {/* Bottom */}
 
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-3"
+          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
         >
           <CustomerPieChart />
 
