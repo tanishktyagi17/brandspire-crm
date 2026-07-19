@@ -16,7 +16,6 @@ export default function CustomerStats({ customers }) {
     (customer) => customer.status === "Inactive"
   ).length;
 
-  // Since we don't have dates yet, every customer is considered "new"
   const newCustomers = customers.length;
 
   const stats = [
@@ -51,41 +50,53 @@ export default function CustomerStats({ customers }) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
+
       {stats.map((item, index) => {
         const Icon = item.icon;
 
         return (
           <div
             key={index}
-            className={`bg-gradient-to-r ${item.bg} rounded-3xl p-6 text-white shadow-xl hover:scale-105 transition duration-300`}
+            className={`bg-gradient-to-r ${item.bg} rounded-2xl lg:rounded-3xl p-4 lg:p-6 text-white shadow-xl transition hover:scale-105`}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm opacity-80">
-                  {item.title}
-                </p>
+            <div className="flex flex-col justify-between h-full">
 
-                <h2 className="text-4xl font-bold mt-2">
-                  {item.value}
-                </h2>
+              <div className="flex justify-between items-start">
 
-                <p className="mt-5 text-sm opacity-90">
+                <div>
+                  <p className="text-[11px] sm:text-sm opacity-90">
+                    {item.title}
+                  </p>
+
+                  <h2 className="mt-2 text-3xl lg:text-4xl font-bold">
+                    {item.value}
+                  </h2>
+                </div>
+
+                <div className="rounded-xl bg-white/20 p-2 lg:p-4">
+                  <Icon size={24} className="lg:w-8 lg:h-8" />
+                </div>
+
+              </div>
+
+              <div className="mt-5">
+
+                <p className="text-xs lg:text-sm opacity-80">
                   Growth
                 </p>
 
-                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
+                <span className="mt-2 inline-block rounded-full bg-white/20 px-2 py-1 lg:px-3 text-xs lg:text-sm">
                   {item.growth}
                 </span>
+
               </div>
 
-              <div className="bg-white/20 p-4 rounded-2xl">
-                <Icon size={34} />
-              </div>
             </div>
           </div>
         );
       })}
+
     </div>
   );
 }
