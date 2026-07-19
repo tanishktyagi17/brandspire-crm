@@ -9,56 +9,94 @@ export default function CustomerToolbar({
   onAddCustomer,
 }) {
   return (
-    <div className="bg-white rounded-2xl border shadow-sm p-5 flex flex-col lg:flex-row justify-between gap-4">
+    <div className="rounded-2xl border bg-white p-4 shadow-sm">
 
-      <div className="flex flex-col md:flex-row gap-4 flex-1">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
 
-        <div className="relative flex-1">
+        {/* Search + Filter */}
 
-          <Search
-            size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-          />
+        <div className="flex flex-col gap-3 md:flex-row flex-1">
 
-          <input
-            type="text"
-            placeholder="Search customer..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full border rounded-xl py-3 pl-11 pr-4"
-          />
+          <div className="relative flex-1">
+
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+            />
+
+            <input
+              type="text"
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) =>
+                setSearchTerm(e.target.value)
+              }
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-300
+                py-3
+                pl-11
+                pr-4
+                outline-none
+                transition
+                focus:border-blue-500
+                focus:ring-2
+                focus:ring-blue-200
+              "
+            />
+
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value)
+            }
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-300
+              px-4
+              py-3
+              outline-none
+              transition
+              md:w-52
+              focus:border-blue-500
+              focus:ring-2
+              focus:ring-blue-200
+            "
+          >
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
 
         </div>
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="border rounded-xl px-4 py-3"
-        >
-          <option value="All">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
+        {/* Buttons */}
 
-      </div>
+        <div className="grid grid-cols-2 gap-3 lg:flex">
 
-      <div className="flex gap-3">
+          <Button
+            variant="outline"
+            className="h-11 w-full"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Export
+          </Button>
 
-        <Button variant="outline">
+          <Button
+            onClick={onAddCustomer}
+            className="h-11 w-full"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Customer
+          </Button>
 
-          <Download className="mr-2 h-4 w-4" />
-
-          Export
-
-        </Button>
-
-        <Button onClick={onAddCustomer}>
-
-          <Plus className="mr-2 h-4 w-4" />
-
-          Add Customer
-
-        </Button>
+        </div>
 
       </div>
 

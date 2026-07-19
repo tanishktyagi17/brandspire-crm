@@ -98,22 +98,25 @@ export default function Customers() {
 
   return (
     <DashboardLayout>
+      <div className="space-y-5 lg:space-y-8">
 
-      <div className="space-y-8">
+        {/* Header */}
 
         <div>
-
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-3xl font-bold text-slate-800 lg:text-4xl">
             Customers
           </h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-sm text-slate-500 lg:text-base">
             Manage all your customers and projects.
           </p>
-
         </div>
 
+        {/* Stats */}
+
         <CustomerStats customers={customers} />
+
+        {/* Toolbar */}
 
         <CustomerToolbar
           searchTerm={searchTerm}
@@ -123,11 +126,15 @@ export default function Customers() {
           onAddCustomer={handleAddCustomer}
         />
 
+        {/* Table / Cards */}
+
         <CustomerTable
           customers={filteredCustomers}
           onEdit={handleEdit}
           onDelete={deleteCustomer}
         />
+
+        {/* Dialog */}
 
         <AddCustomerDialog
           open={dialogOpen}
@@ -137,9 +144,7 @@ export default function Customers() {
           selectedCustomer={selectedCustomer}
           isEditMode={isEditMode}
         />
-
       </div>
-
     </DashboardLayout>
   );
 }

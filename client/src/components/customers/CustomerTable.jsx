@@ -1,83 +1,102 @@
 import CustomerRow from "./CustomerRow";
+import CustomerCard from "./CustomerCard";
 
 export default function CustomerTable({
   customers,
   onEdit,
   onDelete,
 }) {
+  if (customers.length === 0) {
+    return (
+      <div className="rounded-2xl border bg-white p-12 text-center shadow-sm">
+        <h3 className="text-xl font-semibold text-slate-700">
+          No Customers Found
+        </h3>
+
+        <p className="mt-2 text-slate-500">
+          Try changing your search or add a new customer.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+    <>
+      {/* ========================= */}
+      {/* Mobile Cards */}
+      {/* ========================= */}
 
-      <div className="overflow-x-auto">
+      <div className="grid gap-5 md:hidden">
+        {customers.map((customer) => (
+          <CustomerCard
+            key={customer.id}
+            customer={customer}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
 
-        <table className="min-w-full">
+      {/* ========================= */}
+      {/* Desktop Table */}
+      {/* ========================= */}
 
-          <thead className="bg-slate-100">
+      <div className="hidden overflow-hidden rounded-2xl border bg-white shadow-sm md:block">
 
-            <tr>
+        <div className="overflow-x-auto">
 
-              <th className="text-left px-6 py-4">
-                Customer
-              </th>
+          <table className="min-w-full">
 
-              <th className="text-left px-6 py-4">
-                Project
-              </th>
+            <thead className="bg-slate-100">
 
-              <th className="text-left px-6 py-4">
-                Email
-              </th>
+              <tr className="text-sm uppercase tracking-wide text-slate-600">
 
-              <th className="text-left px-6 py-4">
-                Phone
-              </th>
+                <th className="px-6 py-4 text-left">
+                  Customer
+                </th>
 
-              <th className="text-left px-6 py-4">
-                Status
-              </th>
+                <th className="px-6 py-4 text-left">
+                  Project
+                </th>
 
-              <th className="text-center px-6 py-4">
-                Actions
-              </th>
+                <th className="px-6 py-4 text-left">
+                  Email
+                </th>
 
-            </tr>
+                <th className="px-6 py-4 text-left">
+                  Phone
+                </th>
 
-          </thead>
+                <th className="px-6 py-4 text-left">
+                  Status
+                </th>
 
-          <tbody>
-
-            {customers.length === 0 ? (
-
-              <tr>
-
-                <td
-                  colSpan="6"
-                  className="text-center py-10 text-gray-500"
-                >
-                  No Customers Found
-                </td>
+                <th className="px-6 py-4 text-center">
+                  Actions
+                </th>
 
               </tr>
 
-            ) : (
+            </thead>
 
-              customers.map((customer) => (
+            <tbody>
+
+              {customers.map((customer) => (
                 <CustomerRow
                   key={customer.id}
                   customer={customer}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />
-              ))
+              ))}
 
-            )}
+            </tbody>
 
-          </tbody>
+          </table>
 
-        </table>
+        </div>
 
       </div>
-
-    </div>
+    </>
   );
 }

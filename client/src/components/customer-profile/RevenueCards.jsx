@@ -33,7 +33,7 @@ export default function RevenueCards({ customerId }) {
 
   const cards = [
     {
-      title: "Total Revenue",
+      title: "Revenue",
       value: `₹${totalRevenue.toLocaleString()}`,
       icon: IndianRupee,
       color: "bg-green-100 text-green-700",
@@ -48,7 +48,7 @@ export default function RevenueCards({ customerId }) {
       title: "Projects",
       value: activeProjects,
       icon: FolderKanban,
-      color: "bg-purple-100 text-purple-700",
+      color: "bg-violet-100 text-violet-700",
     },
     {
       title: "Pending",
@@ -59,31 +59,52 @@ export default function RevenueCards({ customerId }) {
   ];
 
   return (
-    <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className="bg-white rounded-2xl border shadow-sm p-6"
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <p className="text-gray-500 text-sm">
-                {card.title}
-              </p>
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
 
-              <h2 className="text-3xl font-bold mt-2">
-                {card.value}
-              </h2>
+      {cards.map((card) => {
+        const Icon = card.icon;
+
+        return (
+          <div
+            key={card.title}
+            className="
+              rounded-2xl
+              border
+              bg-white
+              p-4
+              shadow-sm
+              transition
+              hover:-translate-y-1
+              hover:shadow-lg
+              lg:p-6
+            "
+          >
+            <div className="flex items-start justify-between">
+
+              <div className="min-w-0">
+
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
+                  {card.title}
+                </p>
+
+                <h2 className="mt-2 break-words text-lg font-bold text-slate-800 sm:text-2xl lg:text-3xl">
+                  {card.value}
+                </h2>
+
+              </div>
+
+              <div
+                className={`ml-3 flex h-12 w-12 items-center justify-center rounded-xl ${card.color} lg:h-14 lg:w-14`}
+              >
+                <Icon size={22} className="lg:h-7 lg:w-7" />
+              </div>
+
             </div>
 
-            <div
-              className={`w-14 h-14 rounded-xl flex items-center justify-center ${card.color}`}
-            >
-              <card.icon size={28} />
-            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
+
     </div>
   );
 }

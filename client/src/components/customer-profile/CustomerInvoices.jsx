@@ -18,50 +18,52 @@ export default function CustomerInvoices({ customerId }) {
     );
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6">
+    <div className="rounded-2xl border bg-white p-4 shadow-sm lg:p-6">
 
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
 
-        <h2 className="text-2xl font-bold">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+        <h2 className="text-xl font-bold text-slate-800 lg:text-2xl">
           Customer Invoices
         </h2>
 
-        <span className="text-sm text-gray-500">
-          {invoices.length} Invoice(s)
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+          {invoices.length} Invoice{invoices.length !== 1 ? "s" : ""}
         </span>
 
       </div>
 
       {invoices.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="py-14 text-center text-slate-500">
           No invoices found for this customer.
         </div>
       ) : (
         <div className="overflow-x-auto">
 
-          <table className="w-full">
+          <table className="min-w-[700px] w-full">
 
             <thead className="bg-slate-100">
 
               <tr>
 
-                <th className="text-left p-3">
+                <th className="p-3 text-left text-sm font-semibold">
                   Invoice
                 </th>
 
-                <th className="text-left p-3">
+                <th className="p-3 text-left text-sm font-semibold">
                   Date
                 </th>
 
-                <th className="text-left p-3">
+                <th className="p-3 text-left text-sm font-semibold">
                   Status
                 </th>
 
-                <th className="text-left p-3">
+                <th className="p-3 text-left text-sm font-semibold">
                   Amount
                 </th>
 
-                <th className="text-center p-3">
+                <th className="p-3 text-center text-sm font-semibold">
                   Actions
                 </th>
 
@@ -75,21 +77,21 @@ export default function CustomerInvoices({ customerId }) {
 
                 <tr
                   key={invoice.id}
-                  className="border-b hover:bg-slate-50"
+                  className="border-b transition hover:bg-slate-50"
                 >
 
-                  <td className="p-3 font-semibold">
-                    {invoice.id}
+                  <td className="p-4 font-semibold text-slate-800">
+                    #{invoice.id}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-4 text-slate-600">
                     {invoice.invoiceDate}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-4">
 
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
                         invoice.status === "Paid"
                           ? "bg-green-100 text-green-700"
                           : invoice.status === "Pending"
@@ -102,42 +104,38 @@ export default function CustomerInvoices({ customerId }) {
 
                   </td>
 
-                  <td className="p-3 font-semibold">
+                  <td className="p-4 font-semibold text-slate-800">
                     ₹{Number(invoice.total || 0).toLocaleString()}
                   </td>
 
-                  <td className="p-3">
+                  <td className="p-4">
 
-                    <div className="flex justify-center gap-3">
+                    <div className="flex justify-center gap-2">
 
                       <button
                         onClick={() =>
-                          navigate(
-                            `/invoice/${invoice.customerId}`
-                          )
+                          navigate(`/invoice/${invoice.customerId}`)
                         }
-                        className="text-blue-600 hover:text-blue-800"
-                        title="View Invoice"
+                        className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
+                        title="View"
                       >
                         <Eye size={18} />
                       </button>
 
                       <button
                         onClick={() =>
-                          navigate(
-                            `/invoice/${invoice.customerId}`
-                          )
+                          navigate(`/invoice/${invoice.customerId}`)
                         }
-                        className="text-orange-500 hover:text-orange-700"
-                        title="Edit Invoice"
+                        className="rounded-lg p-2 text-orange-500 transition hover:bg-orange-50"
+                        title="Edit"
                       >
                         <Pencil size={18} />
                       </button>
 
                       <button
                         onClick={() => window.print()}
-                        className="text-violet-600 hover:text-violet-800"
-                        title="Print Invoice"
+                        className="rounded-lg p-2 text-violet-600 transition hover:bg-violet-50"
+                        title="Print"
                       >
                         <Printer size={18} />
                       </button>
