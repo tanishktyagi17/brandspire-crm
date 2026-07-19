@@ -24,7 +24,7 @@ export default function Dashboard() {
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.08,
       },
     },
   };
@@ -38,27 +38,27 @@ export default function Dashboard() {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.45,
+        duration: 0.4,
       },
     },
   };
 
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout>
       <motion.div
-        className="space-y-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
+        className="space-y-6 lg:space-y-8"
       >
         {/* Header */}
 
         <motion.div variants={itemVariants}>
-          <h1 className="text-4xl font-bold text-slate-800">
+          <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl lg:text-4xl">
             Dashboard
           </h1>
 
-          <p className="mt-2 text-slate-500">
+          <p className="mt-1 text-sm text-slate-500 sm:mt-2 sm:text-base">
             Welcome back 👋 Here's what's happening today.
           </p>
         </motion.div>
@@ -67,7 +67,7 @@ export default function Dashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid gap-6 md:grid-cols-2 xl:grid-cols-4"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 lg:gap-6"
         >
           <StatCard
             title="Revenue"
@@ -110,7 +110,7 @@ export default function Dashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-3"
         >
           <div className="xl:col-span-2">
             <RevenueChart />
@@ -123,7 +123,7 @@ export default function Dashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-1 xl:grid-cols-3 gap-6"
+          className="grid grid-cols-1 gap-4 lg:gap-6 xl:grid-cols-3"
         >
           <CustomerPieChart />
 

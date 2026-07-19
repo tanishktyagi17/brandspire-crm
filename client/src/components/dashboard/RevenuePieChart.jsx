@@ -39,17 +39,21 @@ const COLORS = [
 
 export default function RevenuePieChart() {
   return (
-    <div className="bg-white rounded-3xl shadow-md p-6 h-full">
+    <div className="h-full rounded-3xl bg-white p-4 shadow-md sm:p-5 lg:p-6">
 
-      <h2 className="text-xl font-bold text-slate-800">
+      {/* Header */}
+
+      <h2 className="text-lg font-bold text-slate-800 sm:text-xl">
         Revenue Sources
       </h2>
 
-      <p className="text-gray-500 mb-6">
+      <p className="mb-4 text-xs text-gray-500 sm:mb-6 sm:text-sm">
         Income generated from different channels.
       </p>
 
-      <div className="h-72">
+      {/* Chart */}
+
+      <div className="h-56 sm:h-64 lg:h-72">
 
         <ResponsiveContainer width="100%" height="100%">
 
@@ -58,8 +62,8 @@ export default function RevenuePieChart() {
             <Pie
               data={data}
               dataKey="value"
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius={45}
+              outerRadius={75}
               paddingAngle={3}
             >
               {data.map((entry, index) => (
@@ -78,29 +82,33 @@ export default function RevenuePieChart() {
 
       </div>
 
-      <div className="space-y-3 mt-2">
+      {/* Legend */}
+
+      <div className="mt-4 space-y-2 sm:space-y-3">
 
         {data.map((item, index) => (
 
           <div
             key={item.name}
-            className="flex justify-between items-center"
+            className="flex items-center justify-between"
           >
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
 
               <div
-                className="w-3 h-3 rounded-full"
+                className="h-3 w-3 rounded-full"
                 style={{
                   background: COLORS[index],
                 }}
               />
 
-              <span>{item.name}</span>
+              <span className="text-sm text-slate-700 sm:text-base">
+                {item.name}
+              </span>
 
             </div>
 
-            <span className="font-semibold">
+            <span className="text-sm font-semibold sm:text-base">
               {item.value}%
             </span>
 
