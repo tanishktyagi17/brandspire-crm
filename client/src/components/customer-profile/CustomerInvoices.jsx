@@ -18,30 +18,29 @@ export default function CustomerInvoices({ customerId }) {
     );
 
   return (
-    <div className="rounded-2xl border bg-white p-4 shadow-sm lg:p-6">
+    <div className="rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
 
       {/* Header */}
-
       <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
-        <h2 className="text-xl font-bold text-slate-800 lg:text-2xl">
+        <h2 className="text-xl font-bold sm:text-2xl">
           Customer Invoices
         </h2>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-          {invoices.length} Invoice{invoices.length !== 1 ? "s" : ""}
+        <span className="text-sm text-gray-500">
+          {invoices.length} Invoice(s)
         </span>
 
       </div>
 
       {invoices.length === 0 ? (
-        <div className="py-14 text-center text-slate-500">
+        <div className="py-12 text-center text-gray-500">
           No invoices found for this customer.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl">
 
-          <table className="min-w-[700px] w-full">
+          <table className="min-w-[720px] w-full">
 
             <thead className="bg-slate-100">
 
@@ -80,18 +79,18 @@ export default function CustomerInvoices({ customerId }) {
                   className="border-b transition hover:bg-slate-50"
                 >
 
-                  <td className="p-4 font-semibold text-slate-800">
-                    #{invoice.id}
+                  <td className="p-3 font-semibold whitespace-nowrap">
+                    {invoice.id}
                   </td>
 
-                  <td className="p-4 text-slate-600">
+                  <td className="p-3 whitespace-nowrap">
                     {invoice.invoiceDate}
                   </td>
 
-                  <td className="p-4">
+                  <td className="p-3">
 
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                      className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${
                         invoice.status === "Paid"
                           ? "bg-green-100 text-green-700"
                           : invoice.status === "Pending"
@@ -104,19 +103,19 @@ export default function CustomerInvoices({ customerId }) {
 
                   </td>
 
-                  <td className="p-4 font-semibold text-slate-800">
+                  <td className="p-3 font-semibold whitespace-nowrap">
                     ₹{Number(invoice.total || 0).toLocaleString()}
                   </td>
 
-                  <td className="p-4">
+                  <td className="p-3">
 
-                    <div className="flex justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
 
                       <button
                         onClick={() =>
                           navigate(`/invoice/${invoice.customerId}`)
                         }
-                        className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50"
+                        className="rounded-lg p-2 text-blue-600 transition hover:bg-blue-50 hover:text-blue-800"
                         title="View"
                       >
                         <Eye size={18} />
@@ -126,7 +125,7 @@ export default function CustomerInvoices({ customerId }) {
                         onClick={() =>
                           navigate(`/invoice/${invoice.customerId}`)
                         }
-                        className="rounded-lg p-2 text-orange-500 transition hover:bg-orange-50"
+                        className="rounded-lg p-2 text-orange-500 transition hover:bg-orange-50 hover:text-orange-700"
                         title="Edit"
                       >
                         <Pencil size={18} />
@@ -134,7 +133,7 @@ export default function CustomerInvoices({ customerId }) {
 
                       <button
                         onClick={() => window.print()}
-                        className="rounded-lg p-2 text-violet-600 transition hover:bg-violet-50"
+                        className="rounded-lg p-2 text-violet-600 transition hover:bg-violet-50 hover:text-violet-800"
                         title="Print"
                       >
                         <Printer size={18} />

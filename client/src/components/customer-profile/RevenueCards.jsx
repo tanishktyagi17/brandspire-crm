@@ -33,7 +33,7 @@ export default function RevenueCards({ customerId }) {
 
   const cards = [
     {
-      title: "Revenue",
+      title: "Total Revenue",
       value: `₹${totalRevenue.toLocaleString()}`,
       icon: IndianRupee,
       color: "bg-green-100 text-green-700",
@@ -48,7 +48,7 @@ export default function RevenueCards({ customerId }) {
       title: "Projects",
       value: activeProjects,
       icon: FolderKanban,
-      color: "bg-violet-100 text-violet-700",
+      color: "bg-purple-100 text-purple-700",
     },
     {
       title: "Pending",
@@ -60,51 +60,33 @@ export default function RevenueCards({ customerId }) {
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+      {cards.map((card) => (
+        <div
+          key={card.title}
+          className="rounded-2xl border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-5 lg:p-6"
+        >
+          <div className="flex items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-gray-500 sm:text-sm">
+                {card.title}
+              </p>
 
-      {cards.map((card) => {
-        const Icon = card.icon;
-
-        return (
-          <div
-            key={card.title}
-            className="
-              rounded-2xl
-              border
-              bg-white
-              p-4
-              shadow-sm
-              transition
-              hover:-translate-y-1
-              hover:shadow-lg
-              lg:p-6
-            "
-          >
-            <div className="flex items-start justify-between">
-
-              <div className="min-w-0">
-
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-500 sm:text-sm">
-                  {card.title}
-                </p>
-
-                <h2 className="mt-2 break-words text-lg font-bold text-slate-800 sm:text-2xl lg:text-3xl">
-                  {card.value}
-                </h2>
-
-              </div>
-
-              <div
-                className={`ml-3 flex h-12 w-12 items-center justify-center rounded-xl ${card.color} lg:h-14 lg:w-14`}
-              >
-                <Icon size={22} className="lg:h-7 lg:w-7" />
-              </div>
-
+              <h2 className="mt-2 break-words text-xl font-bold text-slate-800 sm:text-2xl lg:text-3xl">
+                {card.value}
+              </h2>
             </div>
 
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-xl sm:h-12 sm:w-12 lg:h-14 lg:w-14 ${card.color}`}
+            >
+              <card.icon
+                size={20}
+                className="sm:h-6 sm:w-6 lg:h-7 lg:w-7"
+              />
+            </div>
           </div>
-        );
-      })}
-
+        </div>
+      ))}
     </div>
   );
 }

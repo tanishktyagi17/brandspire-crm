@@ -51,41 +51,63 @@ export default function CustomerTimeline() {
   ];
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6">
+    <div className="rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
 
-      <h2 className="text-2xl font-bold mb-6">
-        Activity Timeline
-      </h2>
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-bold sm:text-2xl">
+          Activity Timeline
+        </h2>
+
+        <p className="mt-1 text-sm text-slate-500">
+          Recent activities for this customer.
+        </p>
+      </div>
 
       <div className="space-y-6">
 
-        {timeline.map((item) => (
+        {timeline.map((item, index) => (
           <div
             key={item.id}
             className="flex gap-4"
           >
-
+            {/* Icon */}
             <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${item.color}`}
+              className={`
+                flex
+                h-12
+                w-12
+                shrink-0
+                items-center
+                justify-center
+                rounded-full
+                ${item.color}
+              `}
             >
               {item.icon}
             </div>
 
-            <div className="flex-1 border-b pb-5">
+            {/* Content */}
+            <div
+              className={`flex-1 ${
+                index !== timeline.length - 1
+                  ? "border-b pb-6"
+                  : ""
+              }`}
+            >
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
 
-              <div className="flex justify-between">
-
-                <h3 className="font-semibold">
+                <h3 className="font-semibold text-slate-800">
                   {item.title}
                 </h3>
 
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-slate-500">
                   {item.date}
                 </span>
 
               </div>
 
-              <p className="text-gray-600 mt-2">
+              <p className="mt-2 text-sm leading-6 text-slate-600">
                 {item.description}
               </p>
 

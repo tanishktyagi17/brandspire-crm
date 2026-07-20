@@ -33,7 +33,12 @@ export default function CustomerProjects() {
 
       case "In Progress":
         return {
-          icon: <LoaderCircle size={18} className="animate-spin" />,
+          icon: (
+            <LoaderCircle
+              size={18}
+              className="animate-spin"
+            />
+          ),
           color: "bg-blue-100 text-blue-700",
         };
 
@@ -46,12 +51,20 @@ export default function CustomerProjects() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border shadow-sm p-6">
+    <div className="rounded-2xl border bg-white p-4 shadow-sm sm:p-6">
 
-      <h2 className="text-2xl font-bold mb-6">
-        Projects
-      </h2>
+      {/* Header */}
+      <div className="mb-5">
+        <h2 className="text-xl font-bold sm:text-2xl">
+          Projects
+        </h2>
 
+        <p className="mt-1 text-sm text-slate-500">
+          Current customer project progress.
+        </p>
+      </div>
+
+      {/* Project List */}
       <div className="space-y-4">
 
         {projects.map((project) => {
@@ -60,20 +73,47 @@ export default function CustomerProjects() {
           return (
             <div
               key={project.id}
-              className="flex items-center justify-between border rounded-xl p-4 hover:bg-slate-50"
+              className="
+                flex
+                flex-col
+                gap-4
+                rounded-xl
+                border
+                p-4
+                transition
+                hover:bg-slate-50
+                sm:flex-row
+                sm:items-center
+                sm:justify-between
+              "
             >
-              <div>
-                <h3 className="font-semibold text-lg">
+              <div className="min-w-0">
+
+                <h3 className="truncate text-lg font-semibold text-slate-800">
                   {project.name}
                 </h3>
+
               </div>
 
               <span
-                className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-semibold ${status.color}`}
+                className={`
+                  inline-flex
+                  w-fit
+                  items-center
+                  gap-2
+                  rounded-full
+                  px-3
+                  py-2
+                  text-sm
+                  font-semibold
+                  whitespace-nowrap
+                  ${status.color}
+                `}
               >
                 {status.icon}
                 {project.status}
               </span>
+
             </div>
           );
         })}
