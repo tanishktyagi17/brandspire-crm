@@ -1,3 +1,11 @@
+import {
+  FileText,
+  BadgeCheck,
+  Clock3,
+  AlertTriangle,
+  IndianRupee,
+} from "lucide-react";
+
 export default function InvoiceStats({ invoices }) {
   const totalInvoices = invoices.length;
 
@@ -14,61 +22,92 @@ export default function InvoiceStats({ invoices }) {
   );
 
   const totalRevenue = paidInvoices.reduce(
-    (sum, invoice) => sum + invoice.total,
+    (sum, invoice) => sum + (invoice.total || 0),
     0
   );
 
-  const cards = [
+  const stats = [
     {
       title: "Total Invoices",
       value: totalInvoices,
-      color: "text-blue-600",
-      bg: "bg-blue-50",
+      growth: "+12%",
+      icon: FileText,
+      bg: "from-blue-500 to-indigo-600",
     },
     {
       title: "Paid",
       value: paidInvoices.length,
-      color: "text-green-600",
-      bg: "bg-green-50",
+      growth: "+18%",
+      icon: BadgeCheck,
+      bg: "from-green-500 to-emerald-600",
     },
     {
       title: "Pending",
       value: pendingInvoices.length,
-      color: "text-yellow-600",
-      bg: "bg-yellow-50",
+      growth: "+5%",
+      icon: Clock3,
+      bg: "from-yellow-500 to-orange-500",
     },
     {
       title: "Overdue",
       value: overdueInvoices.length,
-      color: "text-red-600",
-      bg: "bg-red-50",
+      growth: "-3%",
+      icon: AlertTriangle,
+      bg: "from-red-500 to-rose-600",
     },
     {
       title: "Revenue",
       value: `₹${totalRevenue.toLocaleString()}`,
-      color: "text-violet-600",
-      bg: "bg-violet-50",
+      growth: "+24%",
+      icon: IndianRupee,
+      bg: "from-violet-500 to-purple-600",
     },
   ];
 
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-      {cards.map((card) => (
-        <div
-          key={card.title}
-          className={`rounded-2xl border shadow-sm p-6 ${card.bg}`}
-        >
-          <p className="text-gray-500 text-sm">
-            {card.title}
-          </p>
+    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-5 gap-6">
 
-          <h2
-            className={`text-3xl font-bold mt-3 ${card.color}`}
+      {stats.map((item, index) => {
+        const Icon = item.icon;
+
+        return (
+          <div
+            key={index}
+            className={`bg-gradient-to-r ${item.bg} rounded-3xl p-6 text-white shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300`}
           >
-            {card.value}
-          </h2>
-        </div>
-      ))}
+            <div className="flex justify-between items-start">
+
+              <div>
+
+                <p className="text-sm opacity-90">
+                  {item.title}
+                </p>
+
+                <h2 className="text-4xl font-bold mt-2 break-words">
+                  {item.value}
+                </h2>
+
+                <p className="mt-5 text-sm opacity-80">
+                  Growth
+                </p>
+
+                <span className="inline-block mt-1 rounded-full bg-white/20 px-3 py-1 text-sm font-medium">
+                  {item.growth}
+                </span>
+
+              </div>
+
+              <div className="rounded-2xl bg-white/20 p-4">
+
+                <Icon size={34} />
+
+              </div>
+
+            </div>
+          </div>
+        );
+      })}
+
     </div>
   );
 }

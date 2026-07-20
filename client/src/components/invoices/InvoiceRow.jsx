@@ -2,20 +2,18 @@ import {
   Eye,
   Pencil,
   Trash2,
+  CalendarDays,
 } from "lucide-react";
 
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import DeleteDialog from "../common/DeleteDialog";
-
 import { deleteInvoice } from "../../lib/invoiceStorage";
 
-export default function InvoiceRow({
-  invoice,
-}) {
+export default function InvoiceRow({ invoice }) {
   const badgeColors = {
-    Draft: "bg-gray-100 text-gray-700",
+    Draft: "bg-slate-100 text-slate-700",
     Pending: "bg-yellow-100 text-yellow-700",
     Paid: "bg-green-100 text-green-700",
     Overdue: "bg-red-100 text-red-700",
@@ -30,63 +28,112 @@ export default function InvoiceRow({
   };
 
   return (
-    <tr className="border-t hover:bg-slate-50 transition">
+    <tr className="border-b transition-all hover:bg-slate-50">
 
-      <td className="p-4">
+      {/* Invoice */}
+
+      <td className="px-6 py-5">
+
         <div>
-          <h3 className="font-semibold">
+
+          <h3 className="font-bold text-slate-800">
             {invoice.invoiceNumber}
           </h3>
 
-          <p className="text-sm text-gray-500">
+          <p className="mt-1 text-sm text-slate-500">
             {invoice.paymentTerms}
           </p>
+
         </div>
+
       </td>
 
-      <td className="p-4">
-        <div>
-          <h3 className="font-medium">
-            {invoice.customer?.name}
-          </h3>
+      {/* Customer */}
 
-          <p className="text-sm text-gray-500">
-            {invoice.customer?.email}
-          </p>
+      <td className="px-6 py-5">
+
+        <div className="flex items-center gap-3">
+
+          <img
+            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+              invoice.customer?.name || "Customer"
+            )}&background=2563eb&color=fff`}
+            alt={invoice.customer?.name}
+            className="h-11 w-11 rounded-full shadow"
+          />
+
+          <div>
+
+            <p className="font-semibold text-slate-800">
+              {invoice.customer?.name}
+            </p>
+
+            <p className="text-sm text-slate-500">
+              {invoice.customer?.email}
+            </p>
+
+          </div>
+
         </div>
+
       </td>
 
-      <td className="p-4">
-        {invoice.invoiceDate}
+      {/* Date */}
+
+      <td className="px-6 py-5">
+
+        <div className="flex items-center gap-2 text-slate-600">
+
+          <CalendarDays size={16} />
+
+          {invoice.invoiceDate}
+
+        </div>
+
       </td>
 
-      <td className="p-4">
+      {/* Status */}
+
+      <td className="px-6 py-5">
+
         <span
-          className={`px-3 py-1 rounded-full text-sm font-medium ${badgeColors[invoice.status]}`}
+          className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${
+            badgeColors[invoice.status]
+          }`}
         >
           {invoice.status}
         </span>
+
       </td>
 
-      <td className="p-4 text-right font-semibold text-blue-600">
-        ₹{Number(invoice.total || 0).toLocaleString()}
+      {/* Amount */}
+
+      <td className="px-6 py-5 text-right">
+
+        <span className="text-lg font-bold text-blue-600">
+          ₹{Number(invoice.total || 0).toLocaleString()}
+        </span>
+
       </td>
 
-      <td className="p-4">
-        <div className="flex justify-center items-center gap-4">
+      {/* Actions */}
+
+      <td className="px-6 py-5">
+
+        <div className="flex justify-center gap-3">
 
           <Link
             to={`/invoices/${invoice.id}`}
-            className="text-blue-600 hover:text-blue-800 transition"
             title="View Invoice"
+            className="rounded-lg bg-blue-100 p-2 text-blue-600 transition hover:bg-blue-600 hover:text-white"
           >
             <Eye size={18} />
           </Link>
 
           <Link
             to={`/invoice/edit/${invoice.id}`}
-            className="text-green-600 hover:text-green-800 transition"
             title="Edit Invoice"
+            className="rounded-lg bg-green-100 p-2 text-green-600 transition hover:bg-green-600 hover:text-white"
           >
             <Pencil size={18} />
           </Link>
@@ -97,8 +144,8 @@ export default function InvoiceRow({
             onConfirm={handleDelete}
             trigger={
               <button
-                className="text-red-600 hover:text-red-800 transition"
                 title="Delete Invoice"
+                className="rounded-lg bg-red-100 p-2 text-red-600 transition hover:bg-red-600 hover:text-white"
               >
                 <Trash2 size={18} />
               </button>
@@ -106,6 +153,7 @@ export default function InvoiceRow({
           />
 
         </div>
+
       </td>
 
     </tr>

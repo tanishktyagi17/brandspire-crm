@@ -13,7 +13,6 @@ import ActionButtons from "../components/invoiceDetails/ActionButtons";
 
 export default function InvoiceDetails() {
   const { invoiceId } = useParams();
-
   const navigate = useNavigate();
 
   const invoice = useMemo(() => {
@@ -23,47 +22,58 @@ export default function InvoiceDetails() {
   if (!invoice) {
     return (
       <DashboardLayout>
+        <div className="min-h-[70vh] flex items-center justify-center">
+          <div className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-xl">
 
-        <div className="bg-white rounded-2xl shadow-sm border p-16 text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+              <span className="text-4xl">📄</span>
+            </div>
 
-          <h2 className="text-3xl font-bold">
-            Invoice Not Found
-          </h2>
+            <h2 className="text-3xl font-bold text-slate-800">
+              Invoice Not Found
+            </h2>
 
-          <p className="text-gray-500 mt-3">
-            This invoice does not exist.
-          </p>
+            <p className="mt-3 text-slate-500 leading-7">
+              The invoice you're looking for doesn't exist or may have been deleted.
+            </p>
 
-          <button
-            onClick={() => navigate("/invoices")}
-            className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl"
-          >
-            Back to Invoices
-          </button>
+            <button
+              onClick={() => navigate("/invoices")}
+              className="mt-8 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-7 py-3 font-semibold text-white shadow-lg transition hover:scale-105"
+            >
+              Back to Invoices
+            </button>
 
+          </div>
         </div>
-
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
 
-      <div className="space-y-6">
+        <div className="mx-auto max-w-7xl space-y-8 px-4 py-8">
 
-        <DetailsHeader invoice={invoice} />
+          {/* Header */}
+          <DetailsHeader invoice={invoice} />
 
-        <CustomerCard invoice={invoice} />
+          {/* Customer Information */}
+          <CustomerCard invoice={invoice} />
 
-        <ItemsTable items={invoice.items} />
+          {/* Items */}
+          <ItemsTable items={invoice.items} />
 
-        <SummaryCard invoice={invoice} />
+          {/* Summary */}
+          <SummaryCard invoice={invoice} />
 
-        <ActionButtons invoice={invoice} />
+          {/* Actions */}
+          <ActionButtons invoice={invoice} />
+
+        </div>
 
       </div>
-
     </DashboardLayout>
   );
 }
