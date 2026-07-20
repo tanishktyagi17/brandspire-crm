@@ -22,11 +22,11 @@ export default function InvoiceStats({ invoices }) {
   );
 
   const totalRevenue = paidInvoices.reduce(
-    (sum, invoice) => sum + (invoice.total || 0),
+    (sum, invoice) => sum + Number(invoice.total || 0),
     0
   );
 
-  const stats = [
+  const cards = [
     {
       title: "Total Invoices",
       value: totalInvoices,
@@ -51,63 +51,55 @@ export default function InvoiceStats({ invoices }) {
     {
       title: "Overdue",
       value: overdueInvoices.length,
-      growth: "-3%",
+      growth: "-2%",
       icon: AlertTriangle,
-      bg: "from-red-500 to-rose-600",
+      bg: "from-red-500 to-pink-600",
     },
     {
       title: "Revenue",
       value: `₹${totalRevenue.toLocaleString()}`,
-      growth: "+24%",
+      growth: "+20%",
       icon: IndianRupee,
-      bg: "from-violet-500 to-purple-600",
+      bg: "from-violet-500 to-fuchsia-600",
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-5 gap-6">
-
-      {stats.map((item, index) => {
-        const Icon = item.icon;
+    <div className="grid grid-cols-2 xl:grid-cols-5 gap-5">
+      {cards.map((card, index) => {
+        const Icon = card.icon;
 
         return (
           <div
             key={index}
-            className={`bg-gradient-to-r ${item.bg} rounded-3xl p-6 text-white shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300`}
+            className={`bg-gradient-to-r ${card.bg} rounded-3xl p-4 md:p-6 text-white shadow-xl hover:scale-105 transition duration-300`}
           >
             <div className="flex justify-between items-start">
-
-              <div>
-
-                <p className="text-sm opacity-90">
-                  {item.title}
+              <div className="flex-1">
+                <p className="text-sm opacity-80">
+                  {card.title}
                 </p>
 
-                <h2 className="text-4xl font-bold mt-2 break-words">
-                  {item.value}
+                <h2 className="text-3xl md:text-4xl font-bold mt-2 break-words">
+                  {card.value}
                 </h2>
 
-                <p className="mt-5 text-sm opacity-80">
+                <p className="mt-5 text-sm opacity-90">
                   Growth
                 </p>
 
-                <span className="inline-block mt-1 rounded-full bg-white/20 px-3 py-1 text-sm font-medium">
-                  {item.growth}
+                <span className="inline-block bg-white/20 px-3 py-1 rounded-full text-sm mt-1">
+                  {card.growth}
                 </span>
-
               </div>
 
-              <div className="rounded-2xl bg-white/20 p-4">
-
-                <Icon size={34} />
-
+              <div className="bg-white/20 p-3 md:p-4 rounded-2xl ml-3">
+                <Icon size={30} />
               </div>
-
             </div>
           </div>
         );
       })}
-
     </div>
   );
 }
