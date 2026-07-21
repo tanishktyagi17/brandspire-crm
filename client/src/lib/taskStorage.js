@@ -1,78 +1,92 @@
 const STORAGE_KEY = "tasks";
 
-/**
- * Default Tasks
- */
+/*
+|--------------------------------------------------------------------------
+| Default Tasks
+|--------------------------------------------------------------------------
+*/
+
 const defaultTasks = [
   {
-    id: 1,
+    id: Date.now() + 1,
     title: "Call John Doe",
     description: "Discuss CRM requirements and next steps.",
     priority: "High",
     status: "Pending",
-    dueDate: "Tomorrow",
+    dueDate: "2026-07-25",
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 2,
+    id: Date.now() + 2,
     title: "Send Proposal",
     description: "Email pricing proposal to Microsoft.",
     priority: "Medium",
     status: "Pending",
-    dueDate: "Jul 10",
+    dueDate: "2026-07-27",
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 3,
+    id: Date.now() + 3,
     title: "Team Meeting",
     description: "Weekly sales pipeline review.",
     priority: "Low",
     status: "Completed",
-    dueDate: "Completed",
+    dueDate: "2026-07-20",
+    createdAt: new Date().toISOString(),
   },
   {
-    id: 4,
+    id: Date.now() + 4,
     title: "Follow up with Netflix",
     description: "Schedule product demo.",
     priority: "High",
     status: "Pending",
-    dueDate: "Jul 12",
+    dueDate: "2026-07-29",
+    createdAt: new Date().toISOString(),
   },
 ];
 
-/**
- * Get all tasks
- */
+/*
+|--------------------------------------------------------------------------
+| Get Tasks
+|--------------------------------------------------------------------------
+*/
+
 export function getTasks() {
   try {
-    const tasks = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(STORAGE_KEY);
 
-    if (!tasks) {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(defaultTasks)
-      );
-
+    if (!stored) {
+      saveTasks(defaultTasks);
       return defaultTasks;
     }
 
-    return JSON.parse(tasks);
+    const tasks = JSON.parse(stored);
+
+    return Array.isArray(tasks) ? tasks : [];
   } catch (error) {
     console.error("Error loading tasks:", error);
     return [];
   }
 }
 
-/**
- * Get task by ID
- */
+/*
+|--------------------------------------------------------------------------
+| Get Single Task
+|--------------------------------------------------------------------------
+*/
+
 export function getTaskById(id) {
   return getTasks().find(
     (task) => String(task.id) === String(id)
   );
 }
 
-/**
- * Save all tasks
- */
+/*
+|--------------------------------------------------------------------------
+| Save Tasks
+|--------------------------------------------------------------------------
+*/
+
 export function saveTasks(tasks) {
   localStorage.setItem(
     STORAGE_KEY,
@@ -80,26 +94,39 @@ export function saveTasks(tasks) {
   );
 }
 
-/**
- * Add task
- */
+/*
+|--------------------------------------------------------------------------
+| Add Task
+|--------------------------------------------------------------------------
+*/
+
 export function addTask(task) {
   const tasks = getTasks();
 
-  tasks.push(task);
+  const newTask = {
+    ...task,
+    id: task.id || Date.now(),
+    createdAt:
+      task.createdAt || new Date().toISOString(),
+  };
+
+  tasks.unshift(newTask);
 
   saveTasks(tasks);
 
-  return task;
+  return newTask;
 }
 
-/**
- * Update task
- */
+/*
+|--------------------------------------------------------------------------
+| Update Task
+|--------------------------------------------------------------------------
+*/
+
 export function updateTask(updatedTask) {
   const tasks = getTasks();
 
-  const updatedTasks = tasks.map((task) =>
+  const updated = tasks.map((task) =>
     String(task.id) === String(updatedTask.id)
       ? {
           ...task,
@@ -108,23 +135,31 @@ export function updateTask(updatedTask) {
       : task
   );
 
-  saveTasks(updatedTasks);
+  saveTasks(updated);
+
+  return updatedTask;
 }
 
-/**
- * Delete task
- */
+/*
+|--------------------------------------------------------------------------
+| Delete Task
+|--------------------------------------------------------------------------
+*/
+
 export function deleteTask(id) {
-  const filteredTasks = getTasks().filter(
+  const tasks = getTasks().filter(
     (task) => String(task.id) !== String(id)
   );
 
-  saveTasks(filteredTasks);
+  saveTasks(tasks);
 }
 
-/**
- * Clear all tasks
- */
+/*
+|--------------------------------------------------------------------------
+| Clear Tasks
+|--------------------------------------------------------------------------
+*/
+
 export function clearTasks() {
   localStorage.removeItem(STORAGE_KEY);
 }

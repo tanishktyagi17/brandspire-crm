@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Eye,
 } from "lucide-react";
+
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -107,9 +108,9 @@ export default function TaskCard({
     >
       {/* Header */}
 
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-md">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-md">
             {initials || <User size={20} />}
           </div>
 
@@ -118,7 +119,7 @@ export default function TaskCard({
               {task.title}
             </h3>
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 line-clamp-2 text-sm text-slate-500">
               {task.description}
             </p>
           </div>
@@ -133,9 +134,9 @@ export default function TaskCard({
         </span>
       </div>
 
-      {/* Info */}
+      {/* Information Grid */}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className="mt-6 grid grid-cols-2 gap-4">
         <div className="rounded-2xl bg-slate-50 p-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Due Date
@@ -175,31 +176,32 @@ export default function TaskCard({
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Action Buttons */}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-
+      <div className="mt-6 grid grid-cols-2 gap-3">
         <button
           onClick={() => navigate(`/tasks/${task.id}`)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2 font-medium text-slate-700 transition hover:bg-slate-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
         >
           <Eye size={16} />
           View
         </button>
 
-        {task.status !== "Completed" && (
+        {task.status !== "Completed" ? (
           <button
             onClick={() => onComplete(task)}
-            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-2 font-medium text-green-700 transition hover:bg-green-100"
+            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-3 font-medium text-green-700 transition hover:bg-green-100"
           >
             <CircleCheckBig size={16} />
             Complete
           </button>
+        ) : (
+          <div />
         )}
 
         <button
           onClick={() => onEdit(task)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2 font-medium text-blue-700 transition hover:bg-blue-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-3 font-medium text-blue-700 transition hover:bg-blue-100"
         >
           <Pencil size={16} />
           Edit
@@ -210,13 +212,14 @@ export default function TaskCard({
           description={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
           onConfirm={() => onDelete(task.id)}
           trigger={
-            <button className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2 font-medium text-red-700 transition hover:bg-red-100">
+            <button
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 font-medium text-red-700 transition hover:bg-red-100"
+            >
               <Trash2 size={16} />
               Delete
             </button>
           }
         />
-
       </div>
     </motion.div>
   );

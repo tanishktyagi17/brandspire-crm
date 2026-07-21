@@ -2,48 +2,70 @@ import { leadData } from "./leadData";
 
 const STORAGE_KEY = "leads";
 
-/**
- * Initialize default leads
- */
-export function initializeLeads() {
-  const existingLeads = localStorage.getItem(STORAGE_KEY);
+/*
+|--------------------------------------------------------------------------
+| Initialize Leads
+|--------------------------------------------------------------------------
+*/
 
-  if (!existingLeads) {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(leadData)
-    );
+export function initializeLeads() {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY);
+
+    if (!existing) {
+      const defaultLeads = leadData.map((lead) => ({
+        ...lead,
+        id: lead.id || Date.now() + Math.random(),
+        createdAt:
+          lead.createdAt || new Date().toISOString(),
+      }));
+
+      saveLeads(defaultLeads);
+    }
+  } catch (error) {
+    console.error("Error initializing leads:", error);
   }
 }
 
-/**
- * Get all leads
- */
+/*
+|--------------------------------------------------------------------------
+| Get Leads
+|--------------------------------------------------------------------------
+*/
+
 export function getLeads() {
   initializeLeads();
 
   try {
-    const leads = localStorage.getItem(STORAGE_KEY);
+    const leads = JSON.parse(
+      localStorage.getItem(STORAGE_KEY)
+    );
 
-    return leads ? JSON.parse(leads) : [];
+    return Array.isArray(leads) ? leads : [];
   } catch (error) {
     console.error("Error loading leads:", error);
     return [];
   }
 }
 
-/**
- * Get lead by ID
- */
+/*
+|--------------------------------------------------------------------------
+| Get Lead By ID
+|--------------------------------------------------------------------------
+*/
+
 export function getLeadById(id) {
   return getLeads().find(
     (lead) => String(lead.id) === String(id)
   );
 }
 
-/**
- * Save all leads
- */
+/*
+|--------------------------------------------------------------------------
+| Save Leads
+|--------------------------------------------------------------------------
+*/
+
 export function saveLeads(leads) {
   localStorage.setItem(
     STORAGE_KEY,
@@ -51,22 +73,35 @@ export function saveLeads(leads) {
   );
 }
 
-/**
- * Add lead
- */
+/*
+|--------------------------------------------------------------------------
+| Add Lead
+|--------------------------------------------------------------------------
+*/
+
 export function addLead(lead) {
   const leads = getLeads();
 
-  leads.push(lead);
+  const newLead = {
+    ...lead,
+    id: lead.id || Date.now(),
+    createdAt:
+      lead.createdAt || new Date().toISOString(),
+  };
+
+  leads.unshift(newLead);
 
   saveLeads(leads);
 
-  return lead;
+  return newLead;
 }
 
-/**
- * Update lead
- */
+/*
+|--------------------------------------------------------------------------
+| Update Lead
+|--------------------------------------------------------------------------
+*/
+
 export function updateLead(updatedLead) {
   const leads = getLeads();
 
@@ -80,11 +115,16 @@ export function updateLead(updatedLead) {
   );
 
   saveLeads(updatedLeads);
+
+  return updatedLead;
 }
 
-/**
- * Delete lead
- */
+/*
+|--------------------------------------------------------------------------
+| Delete Lead
+|--------------------------------------------------------------------------
+*/
+
 export function deleteLead(id) {
   const filteredLeads = getLeads().filter(
     (lead) => String(lead.id) !== String(id)
@@ -93,9 +133,12 @@ export function deleteLead(id) {
   saveLeads(filteredLeads);
 }
 
-/**
- * Clear all leads
- */
+/*
+|--------------------------------------------------------------------------
+| Clear Leads
+|--------------------------------------------------------------------------
+*/
+
 export function clearLeads() {
   localStorage.removeItem(STORAGE_KEY);
 }
