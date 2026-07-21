@@ -4,7 +4,10 @@ import {
   Pencil,
   Trash2,
   User,
+  Mail,
+  Phone,
 } from "lucide-react";
+
 import { motion } from "framer-motion";
 
 import DeleteDialog from "@/components/common/DeleteDialog";
@@ -35,20 +38,21 @@ export default function LeadCard({
         scale: 1.02,
       }}
       transition={{ duration: 0.25 }}
-      className="group rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-xl"
+      className="group rounded-3xl border border-slate-200 bg-white p-5 shadow-md transition-all hover:shadow-2xl"
     >
-      {/* Top */}
+      {/* Header */}
 
       <div className="flex items-start justify-between">
 
         <div className="flex items-center gap-3">
 
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-md">
-            {initials || <User size={20} />}
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-lg text-white shadow-lg">
+            {initials || <User size={22} />}
           </div>
 
           <div>
-            <h3 className="font-semibold text-slate-800">
+
+            <h3 className="font-bold text-slate-800">
               {lead.name}
             </h3>
 
@@ -56,6 +60,7 @@ export default function LeadCard({
               <Building2 size={15} />
               {lead.company}
             </div>
+
           </div>
 
         </div>
@@ -68,28 +73,53 @@ export default function LeadCard({
 
       </div>
 
+      {/* Contact */}
+
+      <div className="mt-5 space-y-3 text-sm">
+
+        {lead.email && (
+          <div className="flex items-center gap-2 text-slate-600">
+            <Mail size={15} />
+            <span className="truncate">
+              {lead.email}
+            </span>
+          </div>
+        )}
+
+        {lead.phone && (
+          <div className="flex items-center gap-2 text-slate-600">
+            <Phone size={15} />
+            <span>{lead.phone}</span>
+          </div>
+        )}
+
+      </div>
+
       {/* Value */}
 
-      <div className="mt-5 rounded-2xl bg-slate-50 p-4">
+      <div className="mt-5 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-4">
 
-        <p className="text-xs uppercase tracking-wide text-slate-500">
-          Lead Value
+        <p className="text-xs uppercase tracking-wider text-slate-500">
+          Estimated Deal Value
         </p>
 
         <div className="mt-2 flex items-center gap-2 text-2xl font-bold text-slate-800">
+
           <IndianRupee size={22} />
+
           {lead.value}
+
         </div>
 
       </div>
 
-      {/* Actions */}
+      {/* Footer */}
 
       <div className="mt-5 flex gap-3">
 
         <button
           onClick={() => onEdit(lead)}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2 font-medium text-blue-700 transition hover:bg-blue-100"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 font-medium text-blue-700 transition hover:bg-blue-100"
         >
           <Pencil size={16} />
           Edit
@@ -102,7 +132,7 @@ export default function LeadCard({
           trigger={
             <button
               type="button"
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2 font-medium text-red-700 transition hover:bg-red-100"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 font-medium text-red-700 transition hover:bg-red-100"
             >
               <Trash2 size={16} />
               Delete

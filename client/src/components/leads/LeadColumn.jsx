@@ -1,21 +1,31 @@
+import {
+  CircleDot,
+  PhoneCall,
+  BadgeCheck,
+  Trophy,
+} from "lucide-react";
+
 import LeadCard from "./LeadCard";
 
 const stageStyles = {
   New: {
-    header: "bg-blue-500",
-    badge: "bg-blue-100 text-blue-700",
+    gradient: "from-blue-600 to-cyan-500",
+    icon: CircleDot,
   },
+
   Contacted: {
-    header: "bg-amber-500",
-    badge: "bg-amber-100 text-amber-700",
+    gradient: "from-amber-500 to-orange-500",
+    icon: PhoneCall,
   },
+
   Qualified: {
-    header: "bg-violet-500",
-    badge: "bg-violet-100 text-violet-700",
+    gradient: "from-violet-600 to-fuchsia-500",
+    icon: BadgeCheck,
   },
+
   Won: {
-    header: "bg-emerald-500",
-    badge: "bg-emerald-100 text-emerald-700",
+    gradient: "from-emerald-600 to-green-500",
+    icon: Trophy,
   },
 };
 
@@ -37,38 +47,69 @@ export default function LeadColumn({
     new Intl.NumberFormat("en-IN").format(amount);
 
   const style = stageStyles[title];
+  const Icon = style.icon;
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div className="rounded-3xl border border-slate-200 bg-white shadow-lg overflow-hidden">
 
       {/* Header */}
-      <div className={`${style.header} p-5 text-white`}>
+
+      <div
+        className={`bg-gradient-to-r ${style.gradient} p-5 text-white`}
+      >
 
         <div className="flex items-center justify-between">
 
-          <h2 className="text-lg font-bold tracking-wide uppercase">
-            {title}
-          </h2>
+          <div className="flex items-center gap-3">
 
-          <span className="rounded-full bg-white/20 px-3 py-1 text-sm font-semibold">
+            <div className="h-11 w-11 rounded-2xl bg-white/20 flex items-center justify-center">
+
+              <Icon size={22} />
+
+            </div>
+
+            <div>
+
+              <h2 className="font-bold text-lg">
+                {title}
+              </h2>
+
+              <p className="text-sm text-white/80">
+                ₹{formatCurrency(totalValue)}
+              </p>
+
+            </div>
+
+          </div>
+
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-lg font-bold">
             {leads.length}
-          </span>
+          </div>
 
         </div>
 
-        <p className="mt-3 text-sm text-white/80">
-          ₹{formatCurrency(totalValue)}
-        </p>
-
       </div>
 
-      {/* Cards */}
+      {/* Body */}
 
-      <div className="min-h-[600px] space-y-4 bg-slate-50 p-4">
+      <div className="min-h-[620px] bg-slate-50 p-5 space-y-5">
 
         {leads.length === 0 ? (
-          <div className="flex h-40 items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 text-center text-sm text-slate-400">
-            No Leads
+          <div className="flex h-44 flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-white">
+
+            <Icon
+              size={34}
+              className="text-slate-300 mb-3"
+            />
+
+            <p className="font-semibold text-slate-500">
+              No Leads
+            </p>
+
+            <p className="text-sm text-slate-400 mt-1">
+              Leads in this stage will appear here.
+            </p>
+
           </div>
         ) : (
           leads.map((lead) => (

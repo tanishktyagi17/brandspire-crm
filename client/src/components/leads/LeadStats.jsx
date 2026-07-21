@@ -36,7 +36,7 @@ export default function LeadStats() {
     }).format(amount);
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
       <StatCard
         title="Total Leads"
         value={totalLeads}
@@ -48,9 +48,7 @@ export default function LeadStats() {
 
       <StatCard
         title="Pipeline Value"
-        value={`₹${formatCurrency(
-          pipelineValue
-        )}`}
+        value={`₹${formatCurrency(pipelineValue)}`}
         subtitle="Estimated Revenue"
         change="+18%"
         color="bg-gradient-to-r from-emerald-600 to-green-500"

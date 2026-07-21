@@ -41,18 +41,24 @@ export default function LeadBoard({
   });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-4">
-      {stages.map((stage) => (
-        <LeadColumn
-          key={stage}
-          title={stage}
-          leads={filteredLeads.filter(
-            (lead) => lead.stage === stage
-          )}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      ))}
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+
+      <div className="grid gap-6 xl:grid-cols-4">
+
+        {stages.map((stage) => (
+          <LeadColumn
+            key={stage}
+            title={stage}
+            leads={filteredLeads.filter(
+              (lead) => lead.stage === stage
+            )}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
+        ))}
+
+      </div>
+
     </div>
   );
 }
