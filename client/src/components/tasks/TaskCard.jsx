@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   Eye,
 } from "lucide-react";
-
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
@@ -34,12 +33,13 @@ export default function TaskCard({
 }) {
   const navigate = useNavigate();
 
-  const initials = task.title
-    ?.split(" ")
-    .map((word) => word[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const initials =
+    task.title
+      ?.split(" ")
+      .map((word) => word[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "TK";
 
   function getDueDateInfo() {
     if (task.status === "Completed") {
@@ -61,6 +61,13 @@ export default function TaskCard({
 
     const due = new Date(task.dueDate);
     due.setHours(0, 0, 0, 0);
+
+    if (isNaN(due.getTime())) {
+      return {
+        label: task.dueDate,
+        color: "bg-blue-100 text-blue-700",
+      };
+    }
 
     const diffDays = Math.round(
       (due - today) / (1000 * 60 * 60 * 24)
@@ -99,51 +106,56 @@ export default function TaskCard({
 
   return (
     <motion.div
-      whileHover={{
-        y: -6,
-        scale: 1.02,
-      }}
+      whileHover={{ y: -4, scale: 1.01 }}
       transition={{ duration: 0.25 }}
-      className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all hover:shadow-xl"
+      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:shadow-xl"
     >
       {/* Header */}
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-white shadow-md">
-            {initials || <User size={20} />}
-          </div>
+      <div className="flex items-start gap-4">
 
-          <div>
-            <h3 className="text-lg font-semibold text-slate-800">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white font-bold shadow-md">
+          {initials || <User size={20} />}
+        </div>
+
+        <div className="min-w-0 flex-1">
+
+          <div className="flex items-start justify-between gap-2">
+
+            <h3 className="truncate text-lg font-semibold text-slate-800">
               {task.title}
             </h3>
 
-            <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-              {task.description}
-            </p>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                priorityColors[task.priority]
+              }`}
+            >
+              {task.priority}
+            </span>
+
           </div>
+
+          <p className="mt-1 line-clamp-2 text-sm text-slate-500">
+            {task.description}
+          </p>
+
         </div>
 
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            priorityColors[task.priority]
-          }`}
-        >
-          {task.priority}
-        </span>
       </div>
 
-      {/* Information Grid */}
+      {/* Info */}
 
       <div className="mt-6 grid grid-cols-2 gap-4">
+
         <div className="rounded-2xl bg-slate-50 p-4">
+
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Due Date
           </p>
 
-          <div className="flex items-center gap-2 font-medium text-slate-700">
-            <CalendarDays size={18} />
+          <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <CalendarDays size={16} />
             {task.dueDate}
           </div>
 
@@ -153,9 +165,11 @@ export default function TaskCard({
             <AlertTriangle size={14} />
             {dueInfo.label}
           </div>
+
         </div>
 
         <div className="rounded-2xl bg-slate-50 p-4">
+
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Status
           </p>
@@ -173,15 +187,18 @@ export default function TaskCard({
 
             {task.status}
           </div>
+
         </div>
+
       </div>
 
-      {/* Action Buttons */}
+      {/* Actions */}
 
       <div className="mt-6 grid grid-cols-2 gap-3">
+
         <button
           onClick={() => navigate(`/tasks/${task.id}`)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
           <Eye size={16} />
           View
@@ -190,18 +207,20 @@ export default function TaskCard({
         {task.status !== "Completed" ? (
           <button
             onClick={() => onComplete(task)}
-            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-3 font-medium text-green-700 transition hover:bg-green-100"
+            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-3 text-sm font-medium text-green-700 transition hover:bg-green-100"
           >
             <CircleCheckBig size={16} />
             Complete
           </button>
         ) : (
-          <div />
+          <div className="flex items-center justify-center rounded-xl border border-green-200 bg-green-50 py-3 text-sm font-medium text-green-700">
+            Completed
+          </div>
         )}
 
         <button
           onClick={() => onEdit(task)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-3 font-medium text-blue-700 transition hover:bg-blue-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
         >
           <Pencil size={16} />
           Edit
@@ -213,14 +232,16 @@ export default function TaskCard({
           onConfirm={() => onDelete(task.id)}
           trigger={
             <button
-              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 font-medium text-red-700 transition hover:bg-red-100"
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-medium text-red-700 transition hover:bg-red-100"
             >
               <Trash2 size={16} />
               Delete
             </button>
           }
         />
+
       </div>
+
     </motion.div>
   );
 }
