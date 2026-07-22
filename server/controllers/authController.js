@@ -1,11 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const otpGenerator = require("otp-generator");
-
 const User = require("../models/User");
-const Otp = require("../models/Otp");
-
-const sendOtpEmail = require("../utils/sendEmail");
 
 
 /* ===========================================================
@@ -13,6 +8,7 @@ const sendOtpEmail = require("../utils/sendEmail");
 =========================================================== */
 
 const generateToken = (id) => {
+
   return jwt.sign(
     { id },
     process.env.JWT_SECRET,
@@ -20,187 +16,7 @@ const generateToken = (id) => {
       expiresIn: process.env.JWT_EXPIRE || "7d",
     }
   );
-};
 
-
-/* ===========================================================
-   SEND OTP
-=========================================================== */
-
-exports.sendOtp = async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Email is required.",
-      });
-    }
-
-    const normalizedEmail = email.toLowerCase().trim();
-
-
-    const existingUser = await User.findOne({
-      email: normalizedEmail,
-    });
-
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "Email already registered.",
-      });
-    }
-
-
-    const existingOtp = await Otp.findOne({
-      email: normalizedEmail,
-    });
-
-
-    if (existingOtp) {
-
-      const timeDifference =
-        Date.now() - existingOtp.createdAt.getTime();
-
-
-      if (timeDifference < 60000) {
-        return res.status(429).json({
-          success: false,
-          message: "Please wait before requesting another OTP.",
-        });
-      }
-
-      await Otp.deleteMany({
-        email: normalizedEmail,
-      });
-    }
-
-
-    const otp = otpGenerator.generate(6, {
-      digits: true,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
-
-
-    await Otp.create({
-      email: normalizedEmail,
-      otp,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-    });
-
-
-    await sendOtpEmail(
-      normalizedEmail,
-      otp
-    );
-
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP sent successfully.",
-    });
-
-
-  } catch (error) {
-
-    console.error("Send OTP Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
-};
-
-
-
-/* ===========================================================
-   VERIFY OTP
-=========================================================== */
-
-exports.verifyOtp = async (req, res) => {
-  try {
-
-    const { email, otp } = req.body;
-
-
-    if (!email || !otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and OTP are required.",
-      });
-    }
-
-
-    const normalizedEmail =
-      email.toLowerCase().trim();
-
-
-    const otpRecord = await Otp.findOne({
-      email: normalizedEmail,
-    });
-
-
-    if (!otpRecord) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP not found or expired.",
-      });
-    }
-
-
-    if (otpRecord.isUsed) {
-      return res.status(400).json({
-        success: false,
-        message: "OTP already used.",
-      });
-    }
-
-
-    if (otpRecord.expiresAt < Date.now()) {
-
-      await Otp.deleteOne({
-        email: normalizedEmail,
-      });
-
-      return res.status(400).json({
-        success: false,
-        message: "OTP expired.",
-      });
-    }
-
-
-    if (otpRecord.otp !== otp) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid OTP.",
-      });
-    }
-
-
-    otpRecord.isVerified = true;
-
-    await otpRecord.save();
-
-
-    return res.status(200).json({
-      success: true,
-      message: "OTP verified successfully.",
-    });
-
-
-  } catch (error) {
-
-    console.error("Verify OTP Error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error.",
-    });
-  }
 };
 
 
@@ -221,49 +37,45 @@ exports.register = async (req, res) => {
     } = req.body;
 
 
+
+    /* -----------------------------
+       Validation
+    ----------------------------- */
+
     if (!name || !email || !password) {
 
       return res.status(400).json({
-        success:false,
-        message:"Please provide all required fields.",
+
+        success: false,
+
+        message: "Please provide all required fields.",
+
       });
 
     }
 
 
-    if(password.length < 6){
+
+    if (password.length < 6) {
 
       return res.status(400).json({
-        success:false,
-        message:"Password must be at least 6 characters.",
+
+        success: false,
+
+        message: "Password must be at least 6 characters.",
+
       });
 
     }
 
+
+
+    /* -----------------------------
+       Existing User
+    ----------------------------- */
 
     const normalizedEmail =
       email.toLowerCase().trim();
-
-
-
-    const otpRecord = await Otp.findOne({
-      email: normalizedEmail,
-    });
-
-
-    if(
-      !otpRecord ||
-      !otpRecord.isVerified ||
-      otpRecord.isUsed ||
-      otpRecord.expiresAt < Date.now()
-    ){
-
-      return res.status(400).json({
-        success:false,
-        message:"Please verify your email first.",
-      });
-
-    }
 
 
 
@@ -274,27 +86,42 @@ exports.register = async (req, res) => {
 
 
 
-    if(existingUser){
+    if (existingUser) {
 
       return res.status(409).json({
+
         success:false,
+
         message:"Email already registered.",
+
       });
 
     }
 
 
 
+    /* -----------------------------
+       Hash Password
+    ----------------------------- */
+
     const hashedPassword =
-      await bcrypt.hash(password,10);
+      await bcrypt.hash(
+        password,
+        10
+      );
 
 
+
+    /* -----------------------------
+       Validate Role
+    ----------------------------- */
 
     const allowedRoles = [
       "Admin",
       "Manager",
-      "Employee"
+      "Employee",
     ];
+
 
 
     const userRole =
@@ -303,6 +130,10 @@ exports.register = async (req, res) => {
       : "Employee";
 
 
+
+    /* -----------------------------
+       Create User
+    ----------------------------- */
 
     const user =
       await User.create({
@@ -319,14 +150,19 @@ exports.register = async (req, res) => {
 
 
 
-    otpRecord.isUsed = true;
+    /* -----------------------------
+       Generate Token
+    ----------------------------- */
 
-    await otpRecord.save();
+    const token =
+      generateToken(user._id);
 
 
 
     const userData =
       user.toObject();
+
+
 
     delete userData.password;
 
@@ -336,7 +172,9 @@ exports.register = async (req, res) => {
 
       success:true,
 
-      message:"Registration successful. Please login.",
+      message:"Registration successful.",
+
+      token,
 
       user:userData,
 
@@ -344,9 +182,13 @@ exports.register = async (req, res) => {
 
 
 
-  } catch(error){
+  } catch(error) {
 
-    console.error("Register Error:",error);
+
+    console.error(
+      "Register Error:",
+      error
+    );
 
 
     return res.status(500).json({
@@ -359,9 +201,11 @@ exports.register = async (req, res) => {
 
     });
 
+
   }
 
 };
+
 
 
 
@@ -372,109 +216,164 @@ exports.register = async (req, res) => {
 
 exports.login = async (req,res)=>{
 
-try{
 
-const {
-email,
-password
-}=req.body;
+  try {
 
 
-if(!email || !password){
-
-return res.status(400).json({
-success:false,
-message:"Email and password are required.",
-});
-
-}
-
-
-const user =
-await User.findOne({
-email:email.toLowerCase().trim(),
-});
-
-
-if(!user){
-
-return res.status(401).json({
-success:false,
-message:"Invalid email or password.",
-});
-
-}
-
-
-if(!user.isActive){
-
-return res.status(403).json({
-success:false,
-message:"Your account has been disabled.",
-});
-
-}
-
-
-const isMatch =
-await bcrypt.compare(
-password,
-user.password
-);
-
-
-if(!isMatch){
-
-return res.status(401).json({
-success:false,
-message:"Invalid email or password.",
-});
-
-}
+    const {
+      email,
+      password,
+    } = req.body;
 
 
 
-const token =
-generateToken(user._id);
+    /* -----------------------------
+       Validation
+    ----------------------------- */
+
+    if(!email || !password){
+
+      return res.status(400).json({
+
+        success:false,
+
+        message:"Email and password are required.",
+
+      });
+
+    }
 
 
 
-const userData =
-user.toObject();
+    /* -----------------------------
+       Find User
+    ----------------------------- */
 
-delete userData.password;
+    const user =
+      await User.findOne({
 
+        email:
+        email.toLowerCase().trim(),
 
-
-return res.status(200).json({
-
-success:true,
-
-message:"Login successful.",
-
-token,
-
-user:userData,
-
-});
+      });
 
 
-}
-catch(error){
 
-console.error("Login Error:",error);
+    if(!user){
+
+      return res.status(401).json({
+
+        success:false,
+
+        message:"Invalid email or password.",
+
+      });
+
+    }
 
 
-return res.status(500).json({
 
-success:false,
+    /* -----------------------------
+       Account Status
+    ----------------------------- */
 
-message:"Internal server error.",
+    if(!user.isActive){
 
-error:error.message,
+      return res.status(403).json({
 
-});
+        success:false,
 
-}
+        message:"Your account has been disabled.",
+
+      });
+
+    }
+
+
+
+    /* -----------------------------
+       Compare Password
+    ----------------------------- */
+
+    const isMatch =
+      await bcrypt.compare(
+
+        password,
+
+        user.password
+
+      );
+
+
+
+    if(!isMatch){
+
+      return res.status(401).json({
+
+        success:false,
+
+        message:"Invalid email or password.",
+
+      });
+
+    }
+
+
+
+    /* -----------------------------
+       Generate Token
+    ----------------------------- */
+
+    const token =
+      generateToken(user._id);
+
+
+
+    const userData =
+      user.toObject();
+
+
+
+    delete userData.password;
+
+
+
+    return res.status(200).json({
+
+      success:true,
+
+      message:"Login successful.",
+
+      token,
+
+      user:userData,
+
+    });
+
+
+
+  } catch(error){
+
+
+    console.error(
+      "Login Error:",
+      error
+    );
+
+
+
+    return res.status(500).json({
+
+      success:false,
+
+      message:"Internal server error.",
+
+      error:error.message,
+
+    });
+
+
+  }
+
 
 };
