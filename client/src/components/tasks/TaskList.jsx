@@ -98,7 +98,7 @@ export default function TaskList({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-5 lg:grid-cols-1">
+    <div className="space-y-5">
       {filteredTasks.map((task) => (
         <TaskCard
           key={task.id}
