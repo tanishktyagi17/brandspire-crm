@@ -3,17 +3,21 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
+
 /* ===========================================================
    Route Imports
 =========================================================== */
 
 const authRoutes = require("./routes/authRoutes");
 
+
 /* ===========================================================
    Initialize App
 =========================================================== */
 
 const app = express();
+
+
 
 /* ===========================================================
    Middleware
@@ -22,47 +26,80 @@ const app = express();
 // Enable CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: [
+      "https://brandspire-crm.vercel.app",
+      "http://localhost:5173",
+    ],
     credentials: true,
   })
 );
 
+
 // Parse JSON
 app.use(express.json());
 
+
 // Parse URL Encoded Data
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+
 
 // Parse Cookies
 app.use(cookieParser());
+
+
 
 /* ===========================================================
    API Routes
 =========================================================== */
 
 // Authentication Routes
-app.use("/api/auth", authRoutes);
+app.use(
+  "/api/auth",
+  authRoutes
+);
+
+
 
 /* ===========================================================
    Health Check Route
 =========================================================== */
 
 app.get("/", (req, res) => {
+
   res.status(200).json({
+
     success: true,
-    message: "Brandspire CRM Backend is running successfully 🚀",
+
+    message:
+      "Brandspire CRM Backend is running successfully 🚀",
+
   });
+
 });
+
+
 
 /* ===========================================================
    404 Handler
 =========================================================== */
 
 app.use((req, res) => {
+
   res.status(404).json({
+
     success: false,
-    message: "API route not found.",
+
+    message:
+      "API route not found.",
+
   });
+
 });
+
+
 
 module.exports = app;
