@@ -119,7 +119,7 @@ export default function TaskCard({
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate text-base font-semibold text-slate-800">
+            <h3 className="truncate text-base font-semibold text-red-600">
               {task.title}
             </h3>
 
@@ -192,7 +192,7 @@ export default function TaskCard({
           className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
           <Eye size={16} />
-          View
+          VIEW TEST
         </button>
 
         {task.status !== "Completed" ? (
