@@ -105,23 +105,20 @@ export default function TaskCard({
   const dueInfo = getDueDateInfo();
 
   return (
-  <motion.div
-    whileHover={{ y: -4 }}
-    transition={{ duration: 0.2 }}
-    className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-xl"
-  >
-          {/* Header */}
+    <motion.div
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.2 }}
+      className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-xl"
+    >
+      {/* Header */}
 
       <div className="flex items-start gap-3">
-
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 font-bold text-sm text-white shadow">
           {initials || <User size={18} />}
         </div>
 
         <div className="min-w-0 flex-1">
-
           <div className="flex items-start justify-between gap-2">
-
             <h3 className="truncate text-base font-semibold text-slate-800">
               {task.title}
             </h3>
@@ -133,21 +130,17 @@ export default function TaskCard({
             >
               {task.priority}
             </span>
-
           </div>
 
           <p className="mt-1 line-clamp-2 text-sm leading-5 text-slate-500">
             {task.description}
           </p>
-
         </div>
-
       </div>
 
-      {/* Status Badges */}
+      {/* Status */}
 
       <div className="mt-4 flex flex-wrap gap-2">
-
         <span
           className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
             statusColors[task.status]
@@ -168,22 +161,18 @@ export default function TaskCard({
           <AlertTriangle size={14} />
           {dueInfo.label}
         </span>
-
       </div>
 
       {/* Due Date */}
 
       <div className="mt-4 rounded-2xl bg-slate-50 px-4 py-3">
-
         <div className="flex items-center gap-2">
-
           <CalendarDays
             size={18}
             className="text-blue-600"
           />
 
           <div>
-
             <p className="text-xs text-slate-500">
               Due Date
             </p>
@@ -191,19 +180,16 @@ export default function TaskCard({
             <p className="text-sm font-semibold text-slate-700">
               {task.dueDate}
             </p>
-
           </div>
-
         </div>
-
       </div>
 
-      {/* Actions */}
+      {/* Action Buttons */}
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-              <button
+                <button
           onClick={() => navigate(`/tasks/${task.id}`)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
           <Eye size={16} />
           View
@@ -212,21 +198,21 @@ export default function TaskCard({
         {task.status !== "Completed" ? (
           <button
             onClick={() => onComplete(task)}
-            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-2 text-sm font-medium text-green-700 transition hover:bg-green-100"
+            className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-2.5 text-sm font-medium text-green-700 transition hover:bg-green-100"
           >
             <CircleCheckBig size={16} />
-            Done
+            Complete
           </button>
         ) : (
-          <div className="flex items-center justify-center rounded-xl border border-green-200 bg-green-50 py-2 text-sm font-medium text-green-700">
-            <CheckCircle2 size={16} className="mr-2" />
+          <div className="flex items-center justify-center gap-2 rounded-xl border border-green-200 bg-green-50 py-2.5 text-sm font-medium text-green-700">
+            <CheckCircle2 size={16} />
             Completed
           </div>
         )}
 
         <button
           onClick={() => onEdit(task)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
+          className="flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100"
         >
           <Pencil size={16} />
           Edit
@@ -238,17 +224,15 @@ export default function TaskCard({
           onConfirm={() => onDelete(task.id)}
           trigger={
             <button
-              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100"
+              type="button"
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-medium text-red-700 transition hover:bg-red-100"
             >
               <Trash2 size={16} />
               Delete
             </button>
           }
         />
-
       </div>
-
     </motion.div>
   );
 }
-      
