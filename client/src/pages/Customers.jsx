@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import CustomerStats from "../components/customers/CustomerStats";
@@ -6,10 +7,17 @@ import CustomerToolbar from "../components/customers/CustomerToolbar";
 import CustomerTable from "../components/customers/CustomerTable";
 import AddCustomerDialog from "../components/customers/AddCustomerDialog";
 
-import customerData from "../lib/customerData";
+import {
+  getCustomers,
+  createCustomer,
+  updateCustomer as updateCustomerAPI,
+  deleteCustomer as deleteCustomerAPI,
+} from "../services/customerService";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
@@ -17,56 +25,116 @@ export default function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("customers");
+  /* ===========================================================
+     LOAD CUSTOMERS
+  =========================================================== */
 
-    if (saved) {
-      setCustomers(JSON.parse(saved));
-    } else {
-      setCustomers(customerData);
-      localStorage.setItem(
-        "customers",
-        JSON.stringify(customerData)
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getCustomers();
+
+      setCustomers(response.customers || []);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to load customers."
       );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
   }, []);
+  /* ===========================================================
+     ADD CUSTOMER
+  =========================================================== */
 
-  useEffect(() => {
-    if (customers.length) {
-      localStorage.setItem(
-        "customers",
-        JSON.stringify(customers)
+  const addCustomer = async (customer) => {
+    try {
+      const response = await createCustomer(customer);
+
+      setCustomers((prev) => [
+        response.customer,
+        ...prev,
+      ]);
+
+      toast.success("Customer added successfully.");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to add customer."
       );
     }
-  }, [customers]);
-
-  const addCustomer = (customer) => {
-    const newCustomer = {
-      ...customer,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-    };
-
-    setCustomers((prev) => [newCustomer, ...prev]);
   };
 
-  const updateCustomer = (updatedCustomer) => {
-    setCustomers((prev) =>
-      prev.map((customer) =>
-        customer.id === updatedCustomer.id
-          ? updatedCustomer
-          : customer
-      )
-    );
+  /* ===========================================================
+     UPDATE CUSTOMER
+  =========================================================== */
+
+  const updateCustomer = async (updatedCustomer) => {
+    try {
+     const response = await updateCustomerAPI(
+  updatedCustomer.id,
+  updatedCustomer
+);
+
+setCustomers((prev) =>
+  prev.map((customer) =>
+    customer.id === response.customer.id
+      ? response.customer
+      : customer
+  )
+);
+
+      toast.success("Customer updated successfully.");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update customer."
+      );
+    }
   };
 
-  const deleteCustomer = (id) => {
+  /* ===========================================================
+     DELETE CUSTOMER
+  =========================================================== */
+
+  const deleteCustomer = async (id) => {
     if (!window.confirm("Delete this customer?")) return;
 
-    setCustomers((prev) =>
-      prev.filter((customer) => customer.id !== id)
-    );
+    try {
+      await deleteCustomerAPI(id);
+
+      setCustomers((prev) =>
+  prev.filter(
+    (customer) => customer.id !== id
+  )
+);
+
+      toast.success("Customer deleted.");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete customer."
+      );
+    }
   };
+
+  /* ===========================================================
+     DIALOG
+  =========================================================== */
 
   const handleEdit = (customer) => {
     setSelectedCustomer(customer);
@@ -80,21 +148,53 @@ export default function Customers() {
     setDialogOpen(true);
   };
 
-  const filteredCustomers = customers.filter((customer) => {
-    const search = searchTerm.toLowerCase();
+  /* ===========================================================
+     SEARCH & FILTER
+  =========================================================== */
 
-    const matchesSearch =
-      customer.name.toLowerCase().includes(search) ||
-      customer.project.toLowerCase().includes(search) ||
-      customer.email.toLowerCase().includes(search) ||
-      customer.phone.toLowerCase().includes(search);
+  const filteredCustomers = customers.filter(
+    (customer) => {
+      const search = searchTerm.toLowerCase();
 
-    const matchesStatus =
-      statusFilter === "All" ||
-      customer.status === statusFilter;
+      const matchesSearch =
+        customer.name
+          ?.toLowerCase()
+          .includes(search) ||
+        customer.project
+          ?.toLowerCase()
+          .includes(search) ||
+        customer.email
+          ?.toLowerCase()
+          .includes(search) ||
+        customer.phone
+          ?.toLowerCase()
+          .includes(search);
 
-    return matchesSearch && matchesStatus;
-  });
+      const matchesStatus =
+        statusFilter === "All" ||
+        customer.status === statusFilter;
+
+      return (
+        matchesSearch &&
+        matchesStatus
+      );
+    }
+  );
+  /* ===========================================================
+     UI
+  =========================================================== */
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <h2 className="text-xl font-semibold text-slate-600">
+            Loading Customers...
+          </h2>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -126,7 +226,7 @@ export default function Customers() {
           onAddCustomer={handleAddCustomer}
         />
 
-        {/* Table / Cards */}
+        {/* Table */}
 
         <CustomerTable
           customers={filteredCustomers}
