@@ -6,25 +6,40 @@ const Invoice = require("../models/Invoice");
 
 exports.createInvoice = async (req, res) => {
   try {
+    console.log("========== CREATE INVOICE ==========");
+    console.log("Request Body:");
+    console.log(JSON.stringify(req.body, null, 2));
+    console.log("====================================");
+
+    // Create a clean payload
+    const invoiceData = { ...req.body };
+
+    // Never allow frontend to send MongoDB IDs while creating
+    delete invoiceData._id;
+    delete invoiceData.id;
+
     const invoice = await Invoice.create({
-      ...req.body,
+      ...invoiceData,
       user: req.user._id,
     });
 
-    const populatedInvoice = await Invoice.findById(invoice._id)
-      .populate("customer");
+    const populatedInvoice = await Invoice.findById(invoice._id).populate(
+      "customer"
+    );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Invoice created successfully.",
       invoice: populatedInvoice,
     });
   } catch (error) {
-    console.error("Create Invoice Error:", error);
+    console.error("========== CREATE INVOICE ERROR ==========");
+    console.error(error);
+    console.error("==========================================");
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Failed to create invoice.",
+      message: error.message,
     });
   }
 };
@@ -93,12 +108,17 @@ exports.getInvoiceById = async (req, res) => {
 
 exports.updateInvoice = async (req, res) => {
   try {
+    const invoiceData = { ...req.body };
+
+    delete invoiceData._id;
+    delete invoiceData.id;
+
     const invoice = await Invoice.findOneAndUpdate(
       {
         _id: req.params.id,
         user: req.user._id,
       },
-      req.body,
+      invoiceData,
       {
         new: true,
         runValidators: true,
