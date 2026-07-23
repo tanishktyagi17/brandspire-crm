@@ -1,4 +1,4 @@
-import { Search, Download, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function CustomerToolbar({
@@ -67,17 +67,9 @@ export default function CustomerToolbar({
           </select>
         </div>
 
-        {/* Buttons */}
+        {/* Add Customer Button */}
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <Button
-            variant="outline"
-            className="h-11 min-w-[140px]"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-
+        <div className="flex shrink-0">
           <Button
             onClick={onAddCustomer}
             className="h-11 min-w-[170px]"

@@ -9,22 +9,40 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import DeleteDialog from "../common/DeleteDialog";
-import { deleteInvoice } from "../../lib/invoiceStorage";
 
-export default function InvoiceRow({ invoice }) {
+import { deleteInvoice } from "../../services/invoiceService";
+
+export default function InvoiceRow({
+  invoice,
+  onDelete,
+}) {
   const badgeColors = {
     Draft: "bg-slate-100 text-slate-700",
     Pending: "bg-yellow-100 text-yellow-700",
     Paid: "bg-green-100 text-green-700",
     Overdue: "bg-red-100 text-red-700",
+    Cancelled: "bg-red-100 text-red-700",
   };
 
-  const handleDelete = () => {
-    deleteInvoice(invoice.id);
+  const handleDelete = async () => {
+    try {
+      await deleteInvoice(invoice._id);
 
-    toast.success("Invoice deleted successfully.");
+      toast.success(
+        "Invoice deleted successfully."
+      );
 
-    window.location.reload();
+      if (onDelete) {
+        onDelete(invoice._id);
+      }
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete invoice."
+      );
+    }
   };
 
   return (
@@ -86,7 +104,8 @@ export default function InvoiceRow({ invoice }) {
 
           <CalendarDays size={16} />
 
-          {invoice.invoiceDate}
+          {invoice.invoiceDate ||
+            invoice.issueDate?.split("T")[0]}
 
         </div>
 
@@ -98,7 +117,8 @@ export default function InvoiceRow({ invoice }) {
 
         <span
           className={`inline-flex rounded-full px-4 py-2 text-sm font-semibold ${
-            badgeColors[invoice.status]
+            badgeColors[invoice.status] ||
+            "bg-slate-100 text-slate-700"
           }`}
         >
           {invoice.status}
@@ -111,7 +131,10 @@ export default function InvoiceRow({ invoice }) {
       <td className="px-6 py-5 text-right">
 
         <span className="text-lg font-bold text-blue-600">
-          ₹{Number(invoice.total || 0).toLocaleString()}
+          ₹
+          {Number(
+            invoice.total || 0
+          ).toLocaleString()}
         </span>
 
       </td>
@@ -123,7 +146,7 @@ export default function InvoiceRow({ invoice }) {
         <div className="flex justify-center gap-3">
 
           <Link
-            to={`/invoices/${invoice.id}`}
+            to={`/invoices/${invoice._id}`}
             title="View Invoice"
             className="rounded-lg bg-blue-100 p-2 text-blue-600 transition hover:bg-blue-600 hover:text-white"
           >
@@ -131,7 +154,7 @@ export default function InvoiceRow({ invoice }) {
           </Link>
 
           <Link
-            to={`/invoice/edit/${invoice.id}`}
+            to={`/invoice/edit/${invoice._id}`}
             title="Edit Invoice"
             className="rounded-lg bg-green-100 p-2 text-green-600 transition hover:bg-green-600 hover:text-white"
           >

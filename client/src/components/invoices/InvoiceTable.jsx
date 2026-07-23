@@ -23,8 +23,9 @@ export default function InvoiceTable({
 
         </div>
 
-        <div className="rounded-2xl bg-white/20 px-4 py-2 text-white font-semibold">
-          {invoices.length} Invoice{invoices.length !== 1 ? "s" : ""}
+        <div className="rounded-2xl bg-white/20 px-4 py-2 font-semibold text-white">
+          {invoices.length} Invoice
+          {invoices.length !== 1 ? "s" : ""}
         </div>
 
       </div>
@@ -102,7 +103,7 @@ export default function InvoiceTable({
 
               invoices.map((invoice) => (
                 <InvoiceRow
-                  key={invoice.id}
+                  key={invoice._id}
                   invoice={invoice}
                   onDelete={onDelete}
                 />

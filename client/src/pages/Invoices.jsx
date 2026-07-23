@@ -1,21 +1,57 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+
 import DashboardLayout from "../layouts/DashboardLayout";
 
-import { getInvoices } from "../lib/invoiceStorage";
+import { getInvoices } from "../services/invoiceService";
 
 import InvoiceStats from "../components/invoices/InvoiceStats";
 import InvoiceToolbar from "../components/invoices/InvoiceToolbar";
 import InvoiceTable from "../components/invoices/InvoiceTable";
 
 export default function Invoices() {
+  const [loading, setLoading] = useState(true);
+
+  const [allInvoices, setAllInvoices] = useState([]);
+
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("All");
   const [sortBy, setSortBy] = useState("Newest");
 
-  const invoices = useMemo(() => {
-    let data = [...getInvoices()];
+  /* ===========================================================
+     LOAD INVOICES
+  =========================================================== */
 
-    // Search
+  const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+
+      const response = await getInvoices();
+
+      setAllInvoices(response.invoices || []);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to load invoices."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  /* ===========================================================
+     SEARCH + FILTER + SORT
+  =========================================================== */
+
+  const invoices = useMemo(() => {
+    let data = [...allInvoices];
+
     if (search.trim()) {
       const value = search.toLowerCase();
 
@@ -30,14 +66,12 @@ export default function Invoices() {
       );
     }
 
-    // Status Filter
     if (status !== "All") {
       data = data.filter(
         (invoice) => invoice.status === status
       );
     }
 
-    // Sorting
     switch (sortBy) {
       case "Newest":
         data.sort(
@@ -72,7 +106,39 @@ export default function Invoices() {
     }
 
     return data;
-  }, [search, status, sortBy]);
+  }, [allInvoices, search, status, sortBy]);
+
+  /* ===========================================================
+     DELETE CALLBACK
+  =========================================================== */
+
+  const handleDelete = (id) => {
+    setAllInvoices((prev) =>
+      prev.filter(
+        (invoice) => invoice._id !== id
+      )
+    );
+  };
+
+  /* ===========================================================
+     LOADING
+  =========================================================== */
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <h2 className="text-xl font-semibold text-slate-600">
+            Loading Invoices...
+          </h2>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  /* ===========================================================
+     UI
+  =========================================================== */
 
   return (
     <DashboardLayout>
@@ -85,7 +151,7 @@ export default function Invoices() {
             Invoice Management
           </h1>
 
-          <p className="text-gray-500 mt-1">
+          <p className="mt-1 text-gray-500">
             Manage all customer invoices.
           </p>
 
@@ -102,7 +168,10 @@ export default function Invoices() {
           setSortBy={setSortBy}
         />
 
-        <InvoiceTable invoices={invoices} />
+        <InvoiceTable
+          invoices={invoices}
+          onDelete={handleDelete}
+        />
 
       </div>
 

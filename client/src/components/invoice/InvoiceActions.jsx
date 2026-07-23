@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 import { generateInvoicePDF } from "../../lib/pdfGenerator";
 
 import {
@@ -9,42 +11,80 @@ import {
 } from "lucide-react";
 
 import { toast } from "sonner";
-import { saveInvoice } from "../../lib/invoiceStorage";
+
+import {
+  createInvoice,
+  updateInvoice,
+} from "../../services/invoiceService";
 
 export default function InvoiceActions({
   invoice,
   isEditMode,
 }) {
-  const handleSave = () => {
-    saveInvoice(invoice);
+  const navigate = useNavigate();
 
-    toast.success(
-      isEditMode
-        ? "Invoice updated successfully!"
-        : "Invoice saved successfully!",
-      {
-        description: `Invoice ${invoice.invoiceNumber} has been ${
-          isEditMode ? "updated" : "saved"
-        }.`,
+  /* ===========================================================
+     SAVE / UPDATE
+  =========================================================== */
+
+  const handleSave = async () => {
+    try {
+      if (isEditMode) {
+        await updateInvoice(invoice._id, invoice);
+
+        toast.success(
+          "Invoice updated successfully!"
+        );
+      } else {
+        await createInvoice(invoice);
+
+        toast.success(
+          "Invoice created successfully!"
+        );
       }
-    );
+
+      navigate("/invoices");
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to save invoice."
+      );
+    }
   };
+
+  /* ===========================================================
+     PRINT
+  =========================================================== */
 
   const handlePrint = () => {
     window.print();
   };
 
+  /* ===========================================================
+     DOWNLOAD PDF
+  =========================================================== */
+
   const handleDownload = () => {
     try {
       generateInvoicePDF(invoice);
 
-      toast.success("Invoice downloaded successfully.");
+      toast.success(
+        "Invoice downloaded successfully."
+      );
     } catch (error) {
       console.error(error);
 
-      toast.error("Failed to generate PDF.");
+      toast.error(
+        "Failed to generate PDF."
+      );
     }
   };
+
+  /* ===========================================================
+     AI
+  =========================================================== */
 
   const handleAI = () => {
     toast.info(
@@ -55,7 +95,7 @@ export default function InvoiceActions({
   return (
     <div className="mt-10">
 
-      <div className="rounded-3xl border border-slate-200 bg-white/90 backdrop-blur-xl shadow-2xl p-5 md:p-6">
+      <div className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-2xl backdrop-blur-xl md:p-6">
 
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
@@ -63,11 +103,11 @@ export default function InvoiceActions({
 
           <div>
 
-            <h3 className="text-xl md:text-2xl font-bold text-slate-800">
+            <h3 className="text-xl font-bold text-slate-800 md:text-2xl">
               Ready to Finish?
             </h3>
 
-            <p className="mt-1 text-sm md:text-base text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 md:text-base">
               Save, print or export this invoice.
             </p>
 
@@ -75,7 +115,7 @@ export default function InvoiceActions({
 
           {/* Right */}
 
-          <div className="grid grid-cols-2 gap-3 w-full lg:w-auto lg:flex lg:flex-wrap">
+          <div className="grid w-full grid-cols-2 gap-3 lg:flex lg:w-auto lg:flex-wrap">
 
             <button
               onClick={handlePrint}

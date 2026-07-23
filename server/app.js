@@ -9,6 +9,7 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/authRoutes");
 const customerRoutes = require("./routes/customerRoutes");
+const invoiceRoutes = require("./routes/invoiceRoutes");
 
 /* ===========================================================
    Initialize App
@@ -51,8 +52,9 @@ app.use(cookieParser());
 // Authentication Routes
 app.use("/api/auth", authRoutes);
 
-// Customer Routes
+// Customer Routes and invoice Routes
 app.use("/api/customers", customerRoutes);
+app.use("/api/invoices", invoiceRoutes)
 
 /* ===========================================================
    Health Check Route

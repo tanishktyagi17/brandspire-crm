@@ -3,8 +3,9 @@ import { useParams } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 
-import { getCustomerById } from "../lib/customerStorage";
-import { getInvoiceById } from "../lib/invoiceStorage";
+import { getCustomer } from "../services/customerService";
+import { getInvoice } from "../services/invoiceService";
+
 import { generateInvoiceNumber } from "../lib/invoiceNumber";
 
 import CompanyInfo from "../components/invoice/CompanyInfo";
@@ -17,25 +18,37 @@ import PaymentDetails from "../components/invoice/PaymentDetails";
 import InvoiceNotes from "../components/invoice/InvoiceNotes";
 import InvoiceActions from "../components/invoice/InvoiceActions";
 
+import { toast } from "sonner";
+
 export default function Invoice() {
   const { customerId, invoiceId } = useParams();
 
   const isEditMode = Boolean(invoiceId);
 
-  const customer = getCustomerById(customerId);
-
   const today = new Date().toISOString().split("T")[0];
 
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + 7);
+  const due = new Date();
+  due.setDate(due.getDate() + 7);
+
+  const [customer, setCustomer] = useState(null);
+
+  const [loading, setLoading] = useState(true);
 
   const [invoice, setInvoice] = useState({
-    id: "",
+    _id: "",
+
+    customer: null,
+
     invoiceNumber: generateInvoiceNumber(),
+
     invoiceDate: today,
-    dueDate: dueDate.toISOString().split("T")[0],
+
+    dueDate: due.toISOString().split("T")[0],
+
     currency: "INR",
+
     paymentTerms: "Net 7 Days",
+
     status: "Draft",
 
     items: [
@@ -48,6 +61,7 @@ export default function Invoice() {
     ],
 
     gst: 18,
+
     discount: 10,
 
     notes:
@@ -56,15 +70,61 @@ export default function Invoice() {
     createdAt: new Date().toISOString(),
   });
 
+  /* ===========================================================
+     LOAD DATA
+  =========================================================== */
+
   useEffect(() => {
-    if (!isEditMode) return;
+    const loadData = async () => {
+      try {
+        setLoading(true);
 
-    const existingInvoice = getInvoiceById(invoiceId);
+        if (isEditMode) {
+          const response = await getInvoice(invoiceId);
 
-    if (existingInvoice) {
-      setInvoice(existingInvoice);
-    }
-  }, [invoiceId, isEditMode]);
+          const existing = response.invoice;
+
+          setInvoice({
+            ...existing,
+
+            invoiceDate:
+              existing.invoiceDate ||
+              existing.issueDate?.split("T")[0],
+
+            dueDate:
+              existing.dueDate?.split("T")[0],
+          });
+
+          setCustomer(existing.customer);
+        } else {
+          const response =
+            await getCustomer(customerId);
+
+          setCustomer(response.customer);
+
+          setInvoice((prev) => ({
+            ...prev,
+            customer: response.customer,
+          }));
+        }
+      } catch (error) {
+        console.error(error);
+
+        toast.error(
+          error.response?.data?.message ||
+            "Failed to load invoice."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [customerId, invoiceId, isEditMode]);
+
+  /* ===========================================================
+     TOTALS
+  =========================================================== */
 
   const subtotal = useMemo(() => {
     return invoice.items.reduce(
@@ -88,35 +148,54 @@ export default function Invoice() {
   const grandTotal =
     taxableAmount + gstAmount;
 
+  /* ===========================================================
+     LOADING
+  =========================================================== */
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <h2 className="text-xl font-semibold">
+            Loading...
+          </h2>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  /* ===========================================================
+     UI
+  =========================================================== */
+
   return (
     <DashboardLayout>
+
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
 
-        <div className="mx-auto max-w-7xl px-4 py-8 space-y-10">
+        <div className="mx-auto max-w-7xl space-y-10 px-4 py-8">
 
-          {/* Company Information */}
           <CompanyInfo />
 
-          {/* Invoice Header */}
           <InvoiceHeader
-            customerId={customerId}
+            customerId={customer?._id}
             invoice={invoice}
             setInvoice={setInvoice}
             isEditMode={isEditMode}
           />
 
-          {/* Customer + Status */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
 
             <div className="xl:col-span-8">
+
               <CustomerInfo
-                customer={
-                  invoice.customer || customer
-                }
+                customer={customer}
               />
+
             </div>
 
             <div className="xl:col-span-4">
+
               <InvoiceStatus
                 status={invoice.status}
                 setStatus={(status) =>
@@ -126,14 +205,15 @@ export default function Invoice() {
                   }))
                 }
               />
+
             </div>
 
           </div>
 
-          {/* Items + Summary */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
 
             <div className="xl:col-span-7">
+
               <InvoiceItems
                 items={invoice.items}
                 setItems={(items) =>
@@ -143,9 +223,11 @@ export default function Invoice() {
                   }))
                 }
               />
+
             </div>
 
             <div className="xl:col-span-5">
+
               <InvoiceSummary
                 subtotal={subtotal}
                 gst={invoice.gst}
@@ -166,14 +248,13 @@ export default function Invoice() {
                 gstAmount={gstAmount}
                 total={grandTotal}
               />
+
             </div>
 
           </div>
 
-          {/* Payment */}
           <PaymentDetails />
 
-          {/* Notes */}
           <InvoiceNotes
             notes={invoice.notes}
             setNotes={(notes) =>
@@ -184,44 +265,30 @@ export default function Invoice() {
             }
           />
 
-          {/* Sticky Bottom Actions */}
-          {/* Invoice Actions */}
+          <InvoiceActions
+            isEditMode={isEditMode}
+            invoice={{
+              ...invoice,
 
-<div className="mt-10">
+              customer:
+                customer?._id,
 
-  <InvoiceActions
-    isEditMode={isEditMode}
-    invoice={{
-      ...invoice,
+              subtotal,
 
-      id:
-        invoice.id ||
-        Date.now().toString(),
+              discountAmount,
 
-      customer:
-        invoice.customer || customer,
+              taxableAmount,
 
-      subtotal,
+              gstAmount,
 
-      discountAmount,
-
-      taxableAmount,
-
-      gstAmount,
-
-      total: grandTotal,
-
-      createdAt:
-        invoice.createdAt ||
-        new Date().toISOString(),
-    }}
-  />
-
-</div>
+              total: grandTotal,
+            }}
+          />
 
         </div>
 
       </div>
+
     </DashboardLayout>
   );
 }
