@@ -28,31 +28,38 @@ export default function InvoiceActions({
   =========================================================== */
 
   const handleSave = async () => {
-    try {
-      if (isEditMode) {
-        await updateInvoice(invoice._id, invoice);
+  try {
+    const payload = {
+      ...invoice,
 
-        toast.success(
-          "Invoice updated successfully!"
-        );
-      } else {
-        await createInvoice(invoice);
+      issueDate: invoice.invoiceDate,
+      tax: invoice.gst,
+    };
 
-        toast.success(
-          "Invoice created successfully!"
-        );
-      }
+    delete payload._id;
+    delete payload.invoiceDate;
+    delete payload.gst;
 
-      navigate("/invoices");
-    } catch (error) {
-      console.error(error);
+    if (isEditMode) {
+      await updateInvoice(invoice._id, payload);
 
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to save invoice."
-      );
+      toast.success("Invoice updated successfully!");
+    } else {
+      await createInvoice(payload);
+
+      toast.success("Invoice created successfully!");
     }
-  };
+
+    navigate("/invoices");
+  } catch (error) {
+    console.error(error);
+
+    toast.error(
+      error.response?.data?.message ||
+        "Failed to save invoice."
+    );
+  }
+};
 
   /* ===========================================================
      PRINT
