@@ -10,15 +10,12 @@ export default function CustomerToolbar({
 }) {
   return (
     <div className="rounded-2xl border bg-white p-4 shadow-sm">
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
 
         {/* Search + Filter */}
 
-        <div className="flex flex-col gap-3 md:flex-row flex-1">
-
+        <div className="flex flex-1 flex-col gap-3 lg:flex-row">
           <div className="relative flex-1">
-
             <Search
               size={18}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -28,9 +25,7 @@ export default function CustomerToolbar({
               type="text"
               placeholder="Search customers..."
               value={searchTerm}
-              onChange={(e) =>
-                setSearchTerm(e.target.value)
-              }
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="
                 w-full
                 rounded-xl
@@ -46,14 +41,11 @@ export default function CustomerToolbar({
                 focus:ring-blue-200
               "
             />
-
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value)
-            }
+            onChange={(e) => setStatusFilter(e.target.value)}
             className="
               w-full
               rounded-xl
@@ -63,7 +55,7 @@ export default function CustomerToolbar({
               py-3
               outline-none
               transition
-              md:w-52
+              lg:w-52
               focus:border-blue-500
               focus:ring-2
               focus:ring-blue-200
@@ -73,16 +65,14 @@ export default function CustomerToolbar({
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
           </select>
-
         </div>
 
         {/* Buttons */}
 
-        <div className="grid grid-cols-2 gap-3 lg:flex">
-
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <Button
             variant="outline"
-            className="h-11 w-full"
+            className="h-11 min-w-[140px]"
           >
             <Download className="mr-2 h-4 w-4" />
             Export
@@ -90,16 +80,14 @@ export default function CustomerToolbar({
 
           <Button
             onClick={onAddCustomer}
-            className="h-11 w-full"
+            className="h-11 min-w-[170px]"
           >
             <Plus className="mr-2 h-4 w-4" />
-            TEST BUTTON
+            Add Customer
           </Button>
-
         </div>
 
       </div>
-
     </div>
   );
 }
