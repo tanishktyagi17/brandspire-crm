@@ -93,7 +93,7 @@ export default function CustomerToolbar({
             className="h-11 w-full"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Customer
+            TEST BUTTON
           </Button>
 
         </div>
