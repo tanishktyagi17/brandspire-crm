@@ -35,13 +35,18 @@ app.use(
   })
 );
 
-// Parse JSON
-app.use(express.json());
+// Parse JSON (Increased limit for logo & signature uploads)
+app.use(
+  express.json({
+    limit: "10mb",
+  })
+);
 
-// Parse URL Encoded Data
+// Parse URL Encoded Data (Increased limit)
 app.use(
   express.urlencoded({
     extended: true,
+    limit: "10mb",
   })
 );
 
@@ -52,18 +57,18 @@ app.use(cookieParser());
    API Routes
 =========================================================== */
 
-// Authentication Routes
+// Authentication
 app.use("/api/auth", authRoutes);
 
-// Customer Routes ,invoice Routes, lead Routes
+// CRM Modules
 app.use("/api/customers", customerRoutes);
-app.use("/api/invoices", invoiceRoutes)
+app.use("/api/invoices", invoiceRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/company", companyRoutes);
 
 /* ===========================================================
-   Health Check Route
+   Health Check
 =========================================================== */
 
 app.get("/", (req, res) => {
@@ -81,6 +86,27 @@ app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: "API route not found.",
+  });
+});
+
+/* ===========================================================
+   Global Error Handler
+=========================================================== */
+
+app.use((err, req, res, next) => {
+  console.error(err);
+
+  if (err.type === "entity.too.large") {
+    return res.status(413).json({
+      success: false,
+      message:
+        "Uploaded file is too large. Please use a smaller image.",
+    });
+  }
+
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal Server Error",
   });
 });
 
