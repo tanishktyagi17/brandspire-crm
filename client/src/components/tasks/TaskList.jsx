@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { getTasks } from "@/lib/taskStorage";
+import { getTasks } from "../../services/taskService";
 
 import TaskCard from "./TaskCard";
 
@@ -16,7 +16,16 @@ export default function TaskList({
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    setTasks(getTasks());
+    const loadTasks = async () => {
+      try {
+        const data = await getTasks();
+        setTasks(data.tasks || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadTasks();
   }, [refreshKey]);
 
   const priorityOrder = {
@@ -50,13 +59,11 @@ export default function TaskList({
       );
     })
     .sort((a, b) => {
-      // Pending first
       if (a.status !== b.status) {
         if (a.status === "Pending") return -1;
         if (b.status === "Pending") return 1;
       }
 
-      // Priority
       const priorityDiff =
         priorityOrder[a.priority] -
         priorityOrder[b.priority];
@@ -65,7 +72,6 @@ export default function TaskList({
         return priorityDiff;
       }
 
-      // Due Date
       const dateA = new Date(a.dueDate);
       const dateB = new Date(b.dueDate);
 
@@ -76,7 +82,6 @@ export default function TaskList({
         return dateA - dateB;
       }
 
-      // Fallback
       return (
         new Date(b.createdAt || 0) -
         new Date(a.createdAt || 0)
@@ -101,7 +106,7 @@ export default function TaskList({
     <div className="space-y-5">
       {filteredTasks.map((task) => (
         <TaskCard
-          key={task.id}
+          key={task._id}
           task={task}
           onEdit={onEdit}
           onDelete={onDelete}
@@ -110,4 +115,4 @@ export default function TaskList({
       ))}
     </div>
   );
-}
+}s

@@ -11,6 +11,7 @@ const authRoutes = require("./routes/authRoutes");
 const customerRoutes = require("./routes/customerRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const leadRoutes = require("./routes/leadRoutes");
+const taskRoutes = require("./routes/taskRoutes");
 
 /* ===========================================================
    Initialize App
@@ -57,6 +58,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/invoices", invoiceRoutes)
 app.use("/api/leads", leadRoutes);
+app.use("/api/tasks", taskRoutes);
 
 
 /* ===========================================================

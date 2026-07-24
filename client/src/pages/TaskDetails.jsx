@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react";
 
 import DashboardLayout from "@/layouts/DashboardLayout";
-import { getTaskById } from "@/lib/taskStorage";
+import { getTaskById } from "@/services/taskService";
 
 const priorityColors = {
   High: "bg-red-100 text-red-700",
@@ -25,12 +26,40 @@ const statusColors = {
 export default function TaskDetails() {
   const { taskId } = useParams();
 
-  const task = getTaskById(taskId);
+  const [task, setTask] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadTask = async () => {
+      try {
+        const data = await getTaskById(taskId);
+        setTask(data.task);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTask();
+  }, [taskId]);
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
+          <h2 className="text-2xl font-bold text-slate-700">
+            Loading...
+          </h2>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!task) {
     return (
       <DashboardLayout>
-        <div className="rounded-3xl bg-white p-12 shadow-sm text-center">
+        <div className="rounded-3xl bg-white p-12 text-center shadow-sm">
           <h2 className="text-3xl font-bold text-slate-800">
             Task Not Found
           </h2>
@@ -55,19 +84,15 @@ export default function TaskDetails() {
     <DashboardLayout>
       <div className="space-y-8">
 
-        {/* Back Button */}
-
         <Link
           to="/tasks"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium"
+          className="inline-flex items-center gap-2 font-medium text-blue-600 hover:text-blue-700"
         >
           <ArrowLeft size={18} />
           Back to Tasks
         </Link>
 
-        {/* Header */}
-
-        <div className="rounded-3xl bg-white p-8 shadow-sm border">
+        <div className="rounded-3xl border bg-white p-8 shadow-sm">
 
           <div className="flex items-center justify-between">
 
@@ -84,9 +109,7 @@ export default function TaskDetails() {
             </div>
 
             <span
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                priorityColors[task.priority]
-              }`}
+              className={`rounded-full px-4 py-2 text-sm font-semibold ${priorityColors[task.priority]}`}
             >
               {task.priority} Priority
             </span>
@@ -94,8 +117,6 @@ export default function TaskDetails() {
           </div>
 
         </div>
-
-        {/* Details */}
 
         <div className="grid gap-6 lg:grid-cols-2">
 
@@ -133,7 +154,7 @@ export default function TaskDetails() {
                 </span>
 
                 <span className="font-semibold">
-                  {task.dueDate}
+                  {task.dueDate?.split("T")[0]}
                 </span>
 
               </div>
@@ -146,9 +167,7 @@ export default function TaskDetails() {
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    priorityColors[task.priority]
-                  }`}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold ${priorityColors[task.priority]}`}
                 >
                   {task.priority}
                 </span>
@@ -170,9 +189,7 @@ export default function TaskDetails() {
                 </span>
 
                 <span
-                  className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                    statusColors[task.status]
-                  }`}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold ${statusColors[task.status]}`}
                 >
                   {task.status}
                 </span>

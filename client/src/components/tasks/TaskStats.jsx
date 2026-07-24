@@ -9,13 +9,23 @@ import {
 } from "lucide-react";
 
 import StatCard from "@/components/dashboard/StatCard";
-import { getTasks } from "@/lib/taskStorage";
+
+import { getTasks } from "../../services/taskService";
 
 export default function TaskStats({ refreshKey }) {
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
-    setTasks(getTasks());
+    const loadTasks = async () => {
+      try {
+        const data = await getTasks();
+        setTasks(data.tasks || []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadTasks();
   }, [refreshKey]);
 
   const totalTasks = tasks.length;
@@ -39,6 +49,7 @@ export default function TaskStats({ refreshKey }) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
+
       <StatCard
         title="Total Tasks"
         value={totalTasks}
@@ -97,6 +108,7 @@ export default function TaskStats({ refreshKey }) {
         color="bg-gradient-to-r from-violet-600 to-fuchsia-600"
         icon={<TrendingUp size={30} />}
       />
+
     </div>
   );
 }

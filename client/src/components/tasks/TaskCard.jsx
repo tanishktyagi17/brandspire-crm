@@ -196,7 +196,7 @@ export default function TaskCard({
 
       <div className="mt-5 grid grid-cols-2 gap-3">
                 <button
-          onClick={() => navigate(`/tasks/${task.id}`)}
+          onClick={() => navigate(`/tasks/${task._id}`)}
           className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
         >
           <Eye size={16} />
@@ -229,7 +229,7 @@ export default function TaskCard({
         <DeleteDialog
           title="Delete Task"
           description={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
-          onConfirm={() => onDelete(task.id)}
+          onConfirm={() => onDelete(task._id)}}
           trigger={
             <button
               type="button"

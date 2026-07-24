@@ -9,10 +9,10 @@ import TaskList from "../components/tasks/TaskList";
 import AddTaskDialog from "../components/tasks/AddTaskDialog";
 
 import {
-  addTask,
+  createTask,
   updateTask,
   deleteTask,
-} from "@/lib/taskStorage";
+} from "../services/taskService";
 
 export default function Tasks() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,14 +38,23 @@ export default function Tasks() {
     setRefreshKey((prev) => prev + 1);
   }
 
-  function handleAddTask(task) {
-    addTask(task);
+  async function handleAddTask(task) {
+    try {
+      await createTask(task);
 
-    toast.success("Task added successfully.");
+      toast.success("Task added successfully.");
 
-    refreshList();
+      refreshList();
 
-    setDialogOpen(false);
+      setDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to create task."
+      );
+    }
   }
 
   function handleEditTask(task) {
@@ -56,26 +65,64 @@ export default function Tasks() {
     setDialogOpen(true);
   }
 
-  function handleUpdateTask(task) {
-    updateTask(task);
+  async function handleUpdateTask(task) {
+    try {
+      await updateTask(task._id, task);
 
-    toast.success("Task updated successfully.");
+      toast.success("Task updated successfully.");
 
-    refreshList();
+      refreshList();
 
-    setDialogOpen(false);
+      setDialogOpen(false);
 
-    setSelectedTask(null);
+      setSelectedTask(null);
 
-    setIsEditMode(false);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update task."
+      );
+    }
   }
 
-  function handleDeleteTask(id) {
-    deleteTask(id);
+  async function handleDeleteTask(id) {
+    try {
+      await deleteTask(id);
 
-    toast.success("Task deleted successfully.");
+      toast.success("Task deleted successfully.");
 
-    refreshList();
+      refreshList();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete task."
+      );
+    }
+  }
+
+  async function handleCompleteTask(task) {
+    try {
+      await updateTask(task._id, {
+        ...task,
+        status: "Completed",
+      });
+
+      toast.success("Task marked as completed.");
+
+      refreshList();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update task."
+      );
+    }
   }
 
   function handleCloseDialog() {
@@ -117,14 +164,14 @@ export default function Tasks() {
         />
 
         <TaskList
-  refreshKey={refreshKey}
-  searchTerm={searchTerm}
-  priorityFilter={priorityFilter}
-  statusFilter={statusFilter}
-  onEdit={handleEditTask}
-  onDelete={handleDeleteTask}
-  onComplete={handleCompleteTask}
-/>
+          refreshKey={refreshKey}
+          searchTerm={searchTerm}
+          priorityFilter={priorityFilter}
+          statusFilter={statusFilter}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+          onComplete={handleCompleteTask}
+        />
 
         <AddTaskDialog
           open={dialogOpen}
@@ -138,14 +185,4 @@ export default function Tasks() {
       </div>
     </DashboardLayout>
   );
-}
-function handleCompleteTask(task) {
-  updateTask({
-    ...task,
-    status: "Completed",
-  });
-
-  toast.success("Task marked as completed.");
-
-  refreshList();
 }
