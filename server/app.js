@@ -12,6 +12,7 @@ const customerRoutes = require("./routes/customerRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const leadRoutes = require("./routes/leadRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const companyRoutes = require("./routes/companyRoutes");
 
 /* ===========================================================
    Initialize App
@@ -59,7 +60,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/invoices", invoiceRoutes)
 app.use("/api/leads", leadRoutes);
 app.use("/api/tasks", taskRoutes);
-
+app.use("/api/company", companyRoutes);
 
 /* ===========================================================
    Health Check Route
