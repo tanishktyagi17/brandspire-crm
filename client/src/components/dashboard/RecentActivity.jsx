@@ -1,9 +1,25 @@
-import { Clock3 } from "lucide-react";
-import { getRecentActivities } from "../../lib/dashboardStats";
+import { useEffect, useState } from "react";
 
-const recentActivities = getRecentActivities();
+import { Clock3 } from "lucide-react";
+
+import { getRecentActivities } from "../../services/dashboardService";
 
 export default function RecentActivity() {
+  const [recentActivities, setRecentActivities] = useState([]);
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      try {
+        const data = await getRecentActivities();
+        setRecentActivities(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadActivities();
+  }, []);
+
   return (
     <div className="rounded-2xl lg:rounded-3xl border bg-white shadow-xl p-4 lg:p-6">
 

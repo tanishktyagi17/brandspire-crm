@@ -97,7 +97,7 @@ export default function LeadCard({
 
       {/* Value */}
 
-      <div className="mt-5 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 p-4">
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50 p-4">
 
         <p className="text-xs uppercase tracking-wider text-slate-500">
           Estimated Deal Value
@@ -107,7 +107,7 @@ export default function LeadCard({
 
           <IndianRupee size={22} />
 
-          {lead.value}
+          {Number(lead.value).toLocaleString("en-IN")}
 
         </div>
 
@@ -128,7 +128,7 @@ export default function LeadCard({
         <DeleteDialog
           title="Delete Lead"
           description={`Are you sure you want to delete "${lead.name}"? This action cannot be undone.`}
-          onConfirm={() => onDelete(lead.id)}
+          onConfirm={() => onDelete(lead._id)}
           trigger={
             <button
               type="button"

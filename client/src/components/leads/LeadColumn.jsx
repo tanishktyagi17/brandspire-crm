@@ -113,13 +113,13 @@ export default function LeadColumn({
           </div>
         ) : (
           leads.map((lead) => (
-            <LeadCard
-              key={lead.id}
-              lead={lead}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))
+  <LeadCard
+    key={lead._id}
+    lead={lead}
+    onEdit={onEdit}
+    onDelete={onDelete}
+  />
+))
         )}
 
       </div>

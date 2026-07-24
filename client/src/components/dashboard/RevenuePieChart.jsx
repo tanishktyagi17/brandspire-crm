@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   PieChart,
   Pie,
@@ -6,34 +8,41 @@ import {
   Tooltip,
 } from "recharts";
 
-const data = [
-  { name: "Website", value: 45 },
-  { name: "Referral", value: 20 },
-  { name: "Facebook", value: 15 },
-  { name: "Instagram", value: 10 },
-  { name: "Others", value: 10 },
-];
+import { getInvoiceStatusData } from "../../services/dashboardService";
 
 const COLORS = [
-  "#2563eb",
-  "#10b981",
-  "#f97316",
-  "#8b5cf6",
-  "#ec4899",
+  "#22c55e",
+  "#f59e0b",
+  "#64748b",
 ];
 
 export default function RevenuePieChart() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const result = await getInvoiceStatusData();
+        setData(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadData();
+  }, []);
+
   return (
     <div className="h-full rounded-2xl lg:rounded-3xl bg-white border shadow-xl p-4 lg:p-6">
 
       {/* Header */}
 
       <h2 className="text-lg lg:text-2xl font-bold text-slate-800">
-        Revenue Sources
+        Invoice Status
       </h2>
 
       <p className="mt-1 text-xs lg:text-base text-slate-500">
-        Income generated from different channels.
+        Distribution of invoice statuses.
       </p>
 
       {/* Chart */}
@@ -47,14 +56,15 @@ export default function RevenuePieChart() {
             <Pie
               data={data}
               dataKey="value"
+              nameKey="name"
               innerRadius={40}
               outerRadius={70}
               paddingAngle={3}
             >
               {data.map((entry, index) => (
                 <Cell
-                  key={index}
-                  fill={COLORS[index]}
+                  key={entry.name}
+                  fill={COLORS[index % COLORS.length]}
                 />
               ))}
             </Pie>
@@ -83,7 +93,8 @@ export default function RevenuePieChart() {
               <div
                 className="h-3 w-3 rounded-full"
                 style={{
-                  backgroundColor: COLORS[index],
+                  backgroundColor:
+                    COLORS[index % COLORS.length],
                 }}
               />
 
@@ -94,7 +105,7 @@ export default function RevenuePieChart() {
             </div>
 
             <span className="text-sm lg:text-base font-semibold">
-              {item.value}%
+              {item.value}
             </span>
 
           </div>

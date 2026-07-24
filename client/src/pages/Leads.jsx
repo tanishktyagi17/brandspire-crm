@@ -9,41 +9,54 @@ import LeadToolbar from "../components/leads/LeadToolbar";
 import AddLeadDialog from "../components/leads/AddLeadDialog";
 
 import {
-  addLead,
+  createLead,
   updateLead,
   deleteLead,
-} from "@/lib/leadStorage";
+} from "../services/leadService";
 
 export default function Leads() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [stageFilter, setStageFilter] =
-    useState("All");
+  const [stageFilter, setStageFilter] = useState("All");
 
-  const [refreshKey, setRefreshKey] =
-    useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  const [selectedLead, setSelectedLead] =
-    useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
 
-  const [isEditMode, setIsEditMode] =
-    useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   function refreshBoard() {
     setRefreshKey((prev) => prev + 1);
   }
 
-  function handleAddLead(lead) {
-    addLead(lead);
+  /* ===========================================================
+     CREATE LEAD
+  =========================================================== */
 
-    toast.success("Lead added successfully.");
+  async function handleAddLead(lead) {
+    try {
+      await createLead(lead);
 
-    refreshBoard();
+      toast.success("Lead added successfully.");
 
-    setDialogOpen(false);
+      refreshBoard();
+
+      setDialogOpen(false);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to create lead."
+      );
+    }
   }
+
+  /* ===========================================================
+     EDIT LEAD
+  =========================================================== */
 
   function handleEditLead(lead) {
     setSelectedLead(lead);
@@ -53,27 +66,57 @@ export default function Leads() {
     setDialogOpen(true);
   }
 
-  function handleUpdateLead(lead) {
-    updateLead(lead);
+  /* ===========================================================
+     UPDATE LEAD
+  =========================================================== */
 
-    toast.success("Lead updated successfully.");
+  async function handleUpdateLead(lead) {
+    try {
+      await updateLead(lead._id, lead);
 
-    refreshBoard();
+      toast.success("Lead updated successfully.");
 
-    setDialogOpen(false);
+      refreshBoard();
 
-    setSelectedLead(null);
+      setDialogOpen(false);
 
-    setIsEditMode(false);
+      setSelectedLead(null);
+
+      setIsEditMode(false);
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to update lead."
+      );
+    }
   }
 
-  function handleDeleteLead(id) {
-    deleteLead(id);
+  /* ===========================================================
+     DELETE LEAD
+  =========================================================== */
 
-    toast.success("Lead deleted successfully.");
+  async function handleDeleteLead(id) {
+    try {
+      await deleteLead(id);
 
-    refreshBoard();
+      toast.success("Lead deleted successfully.");
+
+      refreshBoard();
+    } catch (error) {
+      console.error(error);
+
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete lead."
+      );
+    }
   }
+
+  /* ===========================================================
+     CLOSE DIALOG
+  =========================================================== */
 
   function handleCloseDialog() {
     setDialogOpen(false);
@@ -88,7 +131,9 @@ export default function Leads() {
       <div className="space-y-8">
 
         {/* Page Header */}
+
         <div>
+
           <h1 className="text-4xl font-bold text-slate-800">
             Lead Pipeline
           </h1>
@@ -96,12 +141,15 @@ export default function Leads() {
           <p className="mt-2 text-slate-500">
             Manage and track every sales opportunity from one place.
           </p>
+
         </div>
 
         {/* Analytics */}
+
         <LeadStats key={refreshKey} />
 
         {/* Toolbar */}
+
         <LeadToolbar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
@@ -115,6 +163,7 @@ export default function Leads() {
         />
 
         {/* Kanban Board */}
+
         <LeadBoard
           refreshKey={refreshKey}
           searchTerm={searchTerm}
@@ -123,7 +172,8 @@ export default function Leads() {
           onDelete={handleDeleteLead}
         />
 
-        {/* Dialog */}
+        {/* Add / Edit Dialog */}
+
         <AddLeadDialog
           open={dialogOpen}
           onClose={handleCloseDialog}

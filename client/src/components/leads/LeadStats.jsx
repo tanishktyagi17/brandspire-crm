@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   Users,
   IndianRupee,
@@ -5,11 +7,30 @@ import {
   TrendingUp,
 } from "lucide-react";
 
-import { getLeads } from "@/lib/leadStorage";
-import StatCard from "@/components/dashboard/StatCard";
+import StatCard from "../dashboard/StatCard";
+
+import { getLeads } from "../../services/leadService";
+
+import { toast } from "sonner";
 
 export default function LeadStats() {
-  const leads = getLeads();
+  const [leads, setLeads] = useState([]);
+
+  useEffect(() => {
+    async function loadLeads() {
+      try {
+        const response = await getLeads();
+
+        setLeads(response.leads || []);
+      } catch (error) {
+        console.error(error);
+
+        toast.error("Failed to load lead statistics.");
+      }
+    }
+
+    loadLeads();
+  }, []);
 
   const totalLeads = leads.length;
 
@@ -18,11 +39,9 @@ export default function LeadStats() {
   ).length;
 
   const pipelineValue = leads.reduce((total, lead) => {
-    const value = Number(
-      String(lead.value).replace(/[^\d]/g, "")
-    );
+    const value = Number(lead.value || 0);
 
-    return total + (isNaN(value) ? 0 : value);
+    return total + value;
   }, 0);
 
   const conversion =
@@ -36,7 +55,7 @@ export default function LeadStats() {
     }).format(amount);
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 gap-5">
+    <div className="grid grid-cols-2 gap-5 xl:grid-cols-4">
       <StatCard
         title="Total Leads"
         value={totalLeads}

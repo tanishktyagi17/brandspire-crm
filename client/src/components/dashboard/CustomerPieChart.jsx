@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   PieChart,
   Pie,
@@ -6,9 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-import { getCustomerStatusData } from "../../lib/dashboardData";
-
-const customerStatusData = getCustomerStatusData();
+import { getCustomerStatusData } from "../../services/dashboardService";
 
 const COLORS = [
   "#10b981",
@@ -17,6 +17,21 @@ const COLORS = [
 ];
 
 export default function CustomerPieChart() {
+  const [customerStatusData, setCustomerStatusData] = useState([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await getCustomerStatusData();
+        setCustomerStatusData(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadData();
+  }, []);
+
   return (
     <div className="rounded-2xl lg:rounded-3xl border bg-white shadow-xl p-4 lg:p-6">
 

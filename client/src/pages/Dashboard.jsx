@@ -1,5 +1,7 @@
-import DashboardLayout from "../layouts/DashboardLayout";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+
+import DashboardLayout from "../layouts/DashboardLayout";
 
 import StatCard from "../components/dashboard/StatCard";
 import RevenueChart from "../components/dashboard/RevenueChart";
@@ -8,6 +10,8 @@ import CustomerPieChart from "../components/dashboard/CustomerPieChart";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import QuickActions from "../components/dashboard/QuickActions";
 
+import { getDashboardStats } from "../services/dashboardService";
+
 import {
   IndianRupee,
   Users,
@@ -15,10 +19,30 @@ import {
   Clock3,
 } from "lucide-react";
 
-import { getDashboardStats } from "../lib/dashboardData";
-
 export default function Dashboard() {
-  const stats = getDashboardStats();
+  const [stats, setStats] = useState({
+    totalRevenue: 0,
+    totalCustomers: 0,
+    activeCustomers: 0,
+    inactiveCustomers: 0,
+    totalInvoices: 0,
+    pendingRevenue: 0,
+    paidInvoices: 0,
+    pendingInvoices: 0,
+  });
+
+  useEffect(() => {
+    const loadDashboard = async () => {
+      try {
+        const data = await getDashboardStats();
+        setStats(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadDashboard();
+  }, []);
 
   const containerVariants = {
     hidden: {},

@@ -20,11 +20,15 @@ export default function AddLeadDialog({
   isEditMode,
 }) {
   const emptyForm = {
-    id: null,
+    _id: null,
     name: "",
     company: "",
-    value: "",
+    email: "",
+    phone: "",
+    source: "Website",
     stage: "New",
+    value: "",
+    notes: "",
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -32,7 +36,10 @@ export default function AddLeadDialog({
   useEffect(() => {
     if (open) {
       if (isEditMode && selectedLead) {
-        setForm(selectedLead);
+        setForm({
+          ...emptyForm,
+          ...selectedLead,
+        });
       } else {
         setForm(emptyForm);
       }
@@ -40,10 +47,10 @@ export default function AddLeadDialog({
   }, [open, isEditMode, selectedLead]);
 
   function handleChange(e) {
-    setForm({
-      ...form,
+    setForm((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   }
 
   function handleSubmit(e) {
@@ -52,19 +59,21 @@ export default function AddLeadDialog({
     if (
       !form.name.trim() ||
       !form.company.trim() ||
-      !form.value.trim()
+      !form.email.trim()
     ) {
-      toast.error("Please fill all fields.");
+      toast.error("Please fill all required fields.");
       return;
     }
 
+    const payload = {
+      ...form,
+      value: Number(form.value || 0),
+    };
+
     if (isEditMode) {
-      updateLead(form);
+      updateLead(payload);
     } else {
-      addLead({
-        ...form,
-        id: Date.now(),
-      });
+      addLead(payload);
     }
 
     setForm(emptyForm);
@@ -78,7 +87,7 @@ export default function AddLeadDialog({
         if (!value) onClose();
       }}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? "Edit Lead" : "Add New Lead"}
@@ -106,12 +115,47 @@ export default function AddLeadDialog({
           />
 
           <input
+            name="email"
+            type="email"
+            placeholder="Email Address"
+            value={form.email}
+            onChange={handleChange}
+            className="w-full rounded-xl border p-3"
+          />
+
+          <input
+            name="phone"
+            placeholder="Phone Number"
+            value={form.phone}
+            onChange={handleChange}
+            className="w-full rounded-xl border p-3"
+          />
+
+          <input
             name="value"
-            placeholder="Lead Value (₹)"
+            type="number"
+            placeholder="Lead Value"
             value={form.value}
             onChange={handleChange}
             className="w-full rounded-xl border p-3"
           />
+
+          <select
+            name="source"
+            value={form.source}
+            onChange={handleChange}
+            className="w-full rounded-xl border p-3"
+          >
+            <option>Website</option>
+            <option>Facebook</option>
+            <option>Instagram</option>
+            <option>LinkedIn</option>
+            <option>Google</option>
+            <option>Referral</option>
+            <option>WhatsApp</option>
+            <option>Cold Call</option>
+            <option>Other</option>
+          </select>
 
           <select
             name="stage"
@@ -119,11 +163,20 @@ export default function AddLeadDialog({
             onChange={handleChange}
             className="w-full rounded-xl border p-3"
           >
-            <option value="New">New</option>
-            <option value="Contacted">Contacted</option>
-            <option value="Qualified">Qualified</option>
-            <option value="Won">Won</option>
+            <option>New</option>
+            <option>Contacted</option>
+            <option>Qualified</option>
+            <option>Won</option>
           </select>
+
+          <textarea
+            name="notes"
+            placeholder="Notes"
+            rows={4}
+            value={form.notes}
+            onChange={handleChange}
+            className="w-full rounded-xl border p-3"
+          />
 
           <DialogFooter>
             <Button

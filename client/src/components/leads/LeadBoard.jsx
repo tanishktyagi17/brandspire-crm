@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { getLeads } from "@/lib/leadStorage";
+import { getLeads } from "../../services/leadService";
 
 import LeadColumn from "./LeadColumn";
+
+import { toast } from "sonner";
 
 export default function LeadBoard({
   refreshKey,
@@ -21,15 +23,27 @@ export default function LeadBoard({
   ];
 
   useEffect(() => {
-    setLeads(getLeads());
+    async function loadLeads() {
+      try {
+        const response = await getLeads();
+
+        setLeads(response.leads || []);
+      } catch (error) {
+        console.error(error);
+
+        toast.error("Failed to load leads.");
+      }
+    }
+
+    loadLeads();
   }, [refreshKey]);
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch =
-      lead.name
+      (lead.name || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
-      lead.company
+      (lead.company || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
