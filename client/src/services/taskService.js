@@ -13,7 +13,7 @@ export const getTasks = async () => {
    GET SINGLE TASK
 ========================================== */
 
-export const getTask = async (id) => {
+export const getTaskById = async (id) => {
   const { data } = await api.get(`/tasks/${id}`);
   return data;
 };
