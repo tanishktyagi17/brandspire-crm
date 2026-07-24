@@ -229,7 +229,7 @@ export default function TaskCard({
         <DeleteDialog
           title="Delete Task"
           description={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
-          onConfirm={() => onDelete(task._id)}}
+          onConfirm={() => onDelete(task._id)}
           trigger={
             <button
               type="button"
