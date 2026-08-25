@@ -30,6 +30,11 @@ app.use(
     origin: [
       "https://brandspire-crm.vercel.app",
       "http://localhost:5173",
+
+      // Capacitor Android
+      "http://localhost",
+      "https://localhost",
+      "capacitor://localhost",
     ],
     credentials: true,
   })
