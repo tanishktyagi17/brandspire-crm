@@ -31,7 +31,6 @@ export default function Invoice() {
   due.setDate(due.getDate() + 7);
 
   const [customer, setCustomer] = useState(null);
-
   const [loading, setLoading] = useState(true);
 
   const [invoice, setInvoice] = useState({
@@ -53,7 +52,7 @@ export default function Invoice() {
 
     items: [
       {
-        id: Date.now(),
+        id: Date.now().toString(),
         description: "Website Development",
         quantity: 1,
         price: 0,
@@ -71,79 +70,242 @@ export default function Invoice() {
   });
 
   /* ===========================================================
+     NORMALIZE DATE
+  =========================================================== */
+
+  const formatDateForInput = (value) => {
+    if (!value) return "";
+
+    try {
+      return new Date(value).toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  };
+
+  /* ===========================================================
+     NORMALIZE ITEMS
+  =========================================================== */
+
+  const normalizeItems = (items = []) => {
+    return items.map((item, index) => ({
+      ...item,
+
+      id:
+        item.id ||
+        item._id ||
+        `${Date.now()}-${index}`,
+
+      quantity: Number(item.quantity || 1),
+
+      price: Number(item.price || 0),
+    }));
+  };
+
+  /* ===========================================================
      LOAD DATA
   =========================================================== */
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
       try {
         setLoading(true);
 
+        /* =====================================================
+           EDIT EXISTING INVOICE
+        ===================================================== */
+
         if (isEditMode) {
           const response = await getInvoice(invoiceId);
 
-          const existing = response.invoice;
+          const existing = response?.invoice;
+
+          if (!existing) {
+            throw new Error("Invoice not found.");
+          }
+
+          let loadedCustomer = null;
+
+          /*
+           * MongoDB populate() normally returns:
+           *
+           * customer: {
+           *   _id: "...",
+           *   name: "...",
+           *   ...
+           * }
+           *
+           * But if it isn't populated, customer may simply
+           * contain the MongoDB ObjectId string.
+           */
+
+          if (
+            existing.customer &&
+            typeof existing.customer === "object" &&
+            existing.customer._id
+          ) {
+            loadedCustomer = existing.customer;
+          } else if (
+            typeof existing.customer === "string" &&
+            existing.customer.trim()
+          ) {
+            const customerResponse =
+              await getCustomer(existing.customer);
+
+            loadedCustomer =
+              customerResponse?.customer || null;
+          }
+
+          if (!loadedCustomer) {
+            throw new Error(
+              "Customer linked to this invoice could not be found."
+            );
+          }
+
+          if (cancelled) return;
+
+          setCustomer(loadedCustomer);
 
           setInvoice({
             ...existing,
 
+            customer: loadedCustomer,
+
             invoiceDate:
-              existing.invoiceDate ||
-              existing.issueDate?.split("T")[0],
+              formatDateForInput(
+                existing.invoiceDate ||
+                  existing.issueDate
+              ) || today,
 
             dueDate:
-              existing.dueDate?.split("T")[0],
+              formatDateForInput(
+                existing.dueDate
+              ) ||
+              due.toISOString().split("T")[0],
+
+            currency:
+              existing.currency || "INR",
+
+            paymentTerms:
+              existing.paymentTerms ||
+              "Net 7 Days",
+
+            status:
+              existing.status || "Draft",
+
+            items:
+              normalizeItems(existing.items),
+
+            gst: Number(
+              existing.gst ??
+                existing.tax ??
+                18
+            ),
+
+            discount: Number(
+              existing.discount ?? 0
+            ),
+
+            notes:
+              existing.notes || "",
           });
 
-          setCustomer(existing.customer);
-        } else {
-          const response =
-            await getCustomer(customerId);
-
-          setCustomer(response.customer);
-
-          setInvoice((prev) => ({
-            ...prev,
-            customer: response.customer,
-          }));
+          return;
         }
-      } catch (error) {
-        console.error(error);
 
-        toast.error(
-          error.response?.data?.message ||
-            "Failed to load invoice."
+        /* =====================================================
+           CREATE NEW INVOICE
+        ===================================================== */
+
+        if (!customerId) {
+          throw new Error(
+            "Customer ID is missing."
+          );
+        }
+
+        const response =
+          await getCustomer(customerId);
+
+        const loadedCustomer =
+          response?.customer;
+
+        if (!loadedCustomer) {
+          throw new Error(
+            "Customer not found."
+          );
+        }
+
+        if (cancelled) return;
+
+        setCustomer(loadedCustomer);
+
+        setInvoice((prev) => ({
+          ...prev,
+          customer: loadedCustomer,
+        }));
+      } catch (error) {
+        console.error(
+          "Invoice Load Error:",
+          error
         );
+
+        if (!cancelled) {
+          toast.error(
+            error.response?.data?.message ||
+              error.message ||
+              "Failed to load invoice."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
-  }, [customerId, invoiceId, isEditMode]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    customerId,
+    invoiceId,
+    isEditMode,
+  ]);
 
   /* ===========================================================
      TOTALS
   =========================================================== */
 
   const subtotal = useMemo(() => {
-    return invoice.items.reduce(
+    return (invoice.items || []).reduce(
       (sum, item) =>
         sum +
-        Number(item.quantity) *
-          Number(item.price),
+        Number(item.quantity || 0) *
+          Number(item.price || 0),
       0
     );
   }, [invoice.items]);
 
+  const discountPercentage =
+    Number(invoice.discount || 0);
+
+  const gstPercentage =
+    Number(invoice.gst || 0);
+
   const discountAmount =
-    subtotal * (invoice.discount / 100);
+    subtotal *
+    (discountPercentage / 100);
 
   const taxableAmount =
     subtotal - discountAmount;
 
   const gstAmount =
-    taxableAmount * (invoice.gst / 100);
+    taxableAmount *
+    (gstPercentage / 100);
 
   const grandTotal =
     taxableAmount + gstAmount;
@@ -156,8 +318,8 @@ export default function Invoice() {
     return (
       <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
-          <h2 className="text-xl font-semibold">
-            Loading...
+          <h2 className="text-xl font-semibold text-slate-700">
+            Loading Invoice...
           </h2>
         </div>
       </DashboardLayout>
@@ -170,12 +332,15 @@ export default function Invoice() {
 
   return (
     <DashboardLayout>
-
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
 
         <div className="mx-auto max-w-7xl space-y-10 px-4 py-8">
 
+          {/* Company */}
+
           <CompanyInfo />
+
+          {/* Invoice Header */}
 
           <InvoiceHeader
             customerId={customer?._id}
@@ -184,18 +349,17 @@ export default function Invoice() {
             isEditMode={isEditMode}
           />
 
+          {/* Customer + Status */}
+
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
 
             <div className="xl:col-span-8">
-
               <CustomerInfo
                 customer={customer}
               />
-
             </div>
 
             <div className="xl:col-span-4">
-
               <InvoiceStatus
                 status={invoice.status}
                 setStatus={(status) =>
@@ -205,17 +369,17 @@ export default function Invoice() {
                   }))
                 }
               />
-
             </div>
 
           </div>
 
+          {/* Items + Summary */}
+
           <div className="grid grid-cols-1 gap-8 xl:grid-cols-12">
 
             <div className="xl:col-span-7">
-
               <InvoiceItems
-                items={invoice.items}
+                items={invoice.items || []}
                 setItems={(items) =>
                   setInvoice((prev) => ({
                     ...prev,
@@ -223,40 +387,45 @@ export default function Invoice() {
                   }))
                 }
               />
-
             </div>
 
             <div className="xl:col-span-5">
-
               <InvoiceSummary
                 subtotal={subtotal}
-                gst={invoice.gst}
+                gst={gstPercentage}
                 setGst={(gst) =>
                   setInvoice((prev) => ({
                     ...prev,
                     gst,
                   }))
                 }
-                discount={invoice.discount}
+                discount={
+                  discountPercentage
+                }
                 setDiscount={(discount) =>
                   setInvoice((prev) => ({
                     ...prev,
                     discount,
                   }))
                 }
-                discountAmount={discountAmount}
+                discountAmount={
+                  discountAmount
+                }
                 gstAmount={gstAmount}
                 total={grandTotal}
               />
-
             </div>
 
           </div>
 
+          {/* Payment */}
+
           <PaymentDetails />
 
+          {/* Notes */}
+
           <InvoiceNotes
-            notes={invoice.notes}
+            notes={invoice.notes || ""}
             setNotes={(notes) =>
               setInvoice((prev) => ({
                 ...prev,
@@ -265,19 +434,27 @@ export default function Invoice() {
             }
           />
 
+          {/* Actions */}
+
           <InvoiceActions
             isEditMode={isEditMode}
             invoice={{
               ...invoice,
 
               customer:
-                customer?._id,
+                customer?._id || null,
 
               subtotal,
+
+              discount:
+                discountPercentage,
 
               discountAmount,
 
               taxableAmount,
+
+              gst:
+                gstPercentage,
 
               gstAmount,
 
@@ -288,7 +465,6 @@ export default function Invoice() {
         </div>
 
       </div>
-
     </DashboardLayout>
   );
 }

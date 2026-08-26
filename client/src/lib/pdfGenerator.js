@@ -1,9 +1,16 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+import { Capacitor } from "@capacitor/core";
+import {
+  Directory,
+  Filesystem,
+} from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+
 /* ===========================================================
    BRANDSPIRE PDF GENERATOR
-   Production Ready Version
+   WEB + ANDROID VERSION
 =========================================================== */
 
 /* ===========================================================
@@ -14,13 +21,12 @@ const COMPANY = {
   name: "Brandspire",
   tagline: "Transforming Ideas into Digital Reality",
 
-  address: "81/c, Rajbagh colony,Sahibabad",
+  address: "81/c, Rajbagh colony, Sahibabad",
   city: "Ghaziabad, Uttar Pradesh - 201005",
 
   phone: "+91 9319447795",
   email: "brandspire27@gmail.com",
   website: "www.brandspire.in",
-  
 
   gstin: "GSTIN HERE",
   pan: "PAN HERE",
@@ -62,9 +68,7 @@ const COLORS = {
 
 const PAGE = {
   margin: 15,
-
   headerHeight: 34,
-
   footerHeight: 18,
 };
 
@@ -72,8 +76,8 @@ const PAGE = {
    MONEY FORMAT
 =========================================================== */
 
-const money = (value) =>
-  `Rs. ${Number(value || 0).toLocaleString("en-IN", {
+const money = (amount) =>
+  `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -82,10 +86,12 @@ const money = (value) =>
    VALUE FORMAT
 =========================================================== */
 
-const value = (v) =>
-  v === undefined || v === null || v === ""
+const value = (data) =>
+  data === undefined ||
+  data === null ||
+  data === ""
     ? "-"
-    : String(v);
+    : String(data);
 
 /* ===========================================================
    DATE FORMAT
@@ -95,13 +101,19 @@ function formatDate(date) {
   if (!date) return "-";
 
   try {
-    return new Date(date).toLocaleDateString("en-IN", {
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return String(date);
+    }
+
+    return parsedDate.toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
       year: "numeric",
     });
   } catch {
-    return date;
+    return String(date);
   }
 }
 
@@ -140,10 +152,12 @@ function normal(doc, size = 10) {
 
 function divider(doc, y) {
   doc.setDrawColor(...COLORS.border);
+
   doc.line(
     PAGE.margin,
     y,
-    doc.internal.pageSize.getWidth() - PAGE.margin,
+    doc.internal.pageSize.getWidth() -
+      PAGE.margin,
     y
   );
 }
@@ -152,14 +166,14 @@ function divider(doc, y) {
    ROUNDED CARD
 =========================================================== */
 
-function card(doc, x, y, w, h) {
+function card(doc, x, y, width, height) {
   doc.setFillColor(...COLORS.light);
 
   doc.roundedRect(
     x,
     y,
-    w,
-    h,
+    width,
+    height,
     3,
     3,
     "F"
@@ -172,19 +186,43 @@ function card(doc, x, y, w, h) {
 
 async function loadLogo() {
   try {
-    const response = await fetch("/logo.png");
+    /*
+     * This works both in Vite web builds and
+     * Capacitor's local WebView.
+     */
+
+    const logoUrl = new URL(
+      "/logo.png",
+      window.location.origin
+    ).href;
+
+    const response = await fetch(logoUrl);
+
+    if (!response.ok) {
+      return null;
+    }
 
     const blob = await response.blob();
 
-    return await new Promise((resolve) => {
-      const reader = new FileReader();
+    return await new Promise(
+      (resolve, reject) => {
+        const reader = new FileReader();
 
-      reader.onloadend = () =>
-        resolve(reader.result);
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
 
-      reader.readAsDataURL(blob);
-    });
-  } catch {
+        reader.onerror = reject;
+
+        reader.readAsDataURL(blob);
+      }
+    );
+  } catch (error) {
+    console.warn(
+      "Unable to load invoice logo:",
+      error
+    );
+
     return null;
   }
 }
@@ -204,11 +242,17 @@ function amountInWords(amount) {
 function drawFooter(doc) {
   const pages = doc.getNumberOfPages();
 
-  const width = doc.internal.pageSize.getWidth();
+  const width =
+    doc.internal.pageSize.getWidth();
 
-  const height = doc.internal.pageSize.getHeight();
+  const height =
+    doc.internal.pageSize.getHeight();
 
-  for (let page = 1; page <= pages; page++) {
+  for (
+    let page = 1;
+    page <= pages;
+    page++
+  ) {
     doc.setPage(page);
 
     doc.setDrawColor(...COLORS.border);
@@ -247,19 +291,175 @@ function drawFooter(doc) {
     );
   }
 }
+
+/* ===========================================================
+   CONVERT ARRAY BUFFER TO BASE64
+=========================================================== */
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+
+  const chunkSize = 0x8000;
+
+  let binary = "";
+
+  for (
+    let i = 0;
+    i < bytes.length;
+    i += chunkSize
+  ) {
+    const chunk = bytes.subarray(
+      i,
+      Math.min(
+        i + chunkSize,
+        bytes.length
+      )
+    );
+
+    binary += String.fromCharCode(
+      ...chunk
+    );
+  }
+
+  return btoa(binary);
+}
+
+/* ===========================================================
+   SAFE FILE NAME
+=========================================================== */
+
+function createFileName(invoice) {
+  const invoiceNumber =
+    invoice?.invoiceNumber ||
+    Date.now();
+
+  const safeInvoiceNumber = String(
+    invoiceNumber
+  )
+    .replace(/[<>:"/\\|?*]/g, "-")
+    .replace(/\s+/g, "-");
+
+  return `Invoice-${safeInvoiceNumber}.pdf`;
+}
+
+/* ===========================================================
+   SAVE PDF
+   WEB + ANDROID
+=========================================================== */
+
+async function savePDF(doc, filename) {
+  const platform = Capacitor.getPlatform();
+
+  const isNative =
+    Capacitor.isNativePlatform();
+
+  /* =========================================================
+     WEBSITE
+  ========================================================= */
+
+  if (!isNative || platform === "web") {
+    doc.save(filename);
+
+    return {
+      platform: "web",
+      filename,
+    };
+  }
+
+  /* =========================================================
+     ANDROID / NATIVE
+  ========================================================= */
+
+  try {
+    /*
+     * Generate actual PDF bytes instead of
+     * asking the WebView to download a Blob.
+     */
+
+    const arrayBuffer =
+      doc.output("arraybuffer");
+
+    const base64Data =
+      arrayBufferToBase64(arrayBuffer);
+
+    /*
+     * Directory.Cache does not require broad
+     * Android storage permissions.
+     *
+     * We then open Android's native share sheet,
+     * from which the user can save the PDF to
+     * Files/Drive/etc.
+     */
+
+    const result =
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache,
+        recursive: true,
+      });
+
+    const fileUri = result.uri;
+
+    if (!fileUri) {
+      throw new Error(
+        "Unable to create the PDF file."
+      );
+    }
+
+    const canShare =
+      await Share.canShare();
+
+    if (canShare.value) {
+      await Share.share({
+        title: "Brandspire Invoice",
+
+        text: `Invoice ${
+          filename.replace(".pdf", "")
+        }`,
+
+        url: fileUri,
+
+        dialogTitle:
+          "Save or share invoice",
+      });
+    }
+
+    return {
+      platform,
+      filename,
+      uri: fileUri,
+    };
+  } catch (error) {
+    console.error(
+      "Native PDF Save Error:",
+      error
+    );
+
+    throw new Error(
+      "Failed to save invoice PDF on this device."
+    );
+  }
+}
+
 /* ===========================================================
    PDF GENERATOR
 =========================================================== */
 
-export async function generateInvoicePDF(invoice) {
+export async function generateInvoicePDF(
+  invoice
+) {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
     format: "a4",
   });
 
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
+  const pageWidth =
+    doc.internal.pageSize.getWidth();
+
+  const pageHeight =
+    doc.internal.pageSize.getHeight();
 
   const margin = PAGE.margin;
 
@@ -277,12 +477,27 @@ export async function generateInvoicePDF(invoice) {
       0
     );
 
-  const gst = Number(invoice.gstAmount || 0);
-  const discount = Number(invoice.discountAmount || 0);
+  const gst = Number(
+    invoice.gstAmount || 0
+  );
+
+  const discount = Number(
+    invoice.discountAmount || 0
+  );
 
   const total =
     invoice.total ??
     subtotal + gst - discount;
+
+  /* ===========================================================
+     CUSTOMER
+  =========================================================== */
+
+  const customer =
+    invoice.customer &&
+    typeof invoice.customer === "object"
+      ? invoice.customer
+      : {};
 
   /* ===========================================================
      LOAD LOGO
@@ -295,24 +510,45 @@ export async function generateInvoicePDF(invoice) {
   =========================================================== */
 
   doc.setFillColor(...COLORS.blue);
-  doc.rect(0, 0, pageWidth, 36, "F");
+
+  doc.rect(
+    0,
+    0,
+    pageWidth,
+    36,
+    "F"
+  );
 
   doc.setFillColor(...COLORS.purple);
-  doc.rect(pageWidth - 70, 0, 70, 36, "F");
+
+  doc.rect(
+    pageWidth - 70,
+    0,
+    70,
+    36,
+    "F"
+  );
 
   /* ===========================================================
      LOGO
   =========================================================== */
 
   if (logo) {
-    doc.addImage(
-      logo,
-      "PNG",
-      margin,
-      8,
-      20,
-      20
-    );
+    try {
+      doc.addImage(
+        logo,
+        "PNG",
+        margin,
+        8,
+        20,
+        20
+      );
+    } catch (error) {
+      console.warn(
+        "Unable to add logo to PDF:",
+        error
+      );
+    }
   }
 
   /* ===========================================================
@@ -321,7 +557,11 @@ export async function generateInvoicePDF(invoice) {
 
   doc.setTextColor(255);
 
-  doc.setFont("helvetica", "bold");
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
   doc.setFontSize(18);
 
   doc.text(
@@ -332,7 +572,10 @@ export async function generateInvoicePDF(invoice) {
 
   doc.setFontSize(9);
 
-  doc.setFont("helvetica", "normal");
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
 
   doc.text(
     COMPANY.tagline,
@@ -344,7 +587,11 @@ export async function generateInvoicePDF(invoice) {
      INVOICE TITLE
   =========================================================== */
 
-  doc.setFont("helvetica", "bold");
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
   doc.setFontSize(26);
 
   doc.text(
@@ -356,11 +603,17 @@ export async function generateInvoicePDF(invoice) {
     }
   );
 
-  doc.setFont("helvetica", "normal");
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
+
   doc.setFontSize(10);
 
   doc.text(
-    `Invoice # ${value(invoice.invoiceNumber)}`,
+    `Invoice # ${value(
+      invoice.invoiceNumber
+    )}`,
     pageWidth - margin,
     24,
     {
@@ -369,7 +622,10 @@ export async function generateInvoicePDF(invoice) {
   );
 
   doc.text(
-    formatDate(invoice.invoiceDate),
+    formatDate(
+      invoice.invoiceDate ||
+        invoice.issueDate
+    ),
     pageWidth - margin,
     30,
     {
@@ -380,59 +636,89 @@ export async function generateInvoicePDF(invoice) {
   doc.setTextColor(0);
 
   /* ===========================================================
-   COMPANY INFORMATION
-=========================================================== */
+     COMPANY INFORMATION
+  =========================================================== */
 
-let y = 48;
+  let y = 48;
 
-heading(doc, 12);
-doc.text("Company Details", margin, y);
+  heading(doc, 12);
 
-card(
-  doc,
-  margin,
-  y + 4,
-  82,
-  52
-);
+  doc.text(
+    "Company Details",
+    margin,
+    y
+  );
 
-normal(doc);
+  card(
+    doc,
+    margin,
+    y + 4,
+    82,
+    52
+  );
 
-let cy = y + 12;
+  normal(doc);
 
-// Company Name
-doc.text(String(COMPANY.name || "-"), margin + 5, cy);
+  let cy = y + 12;
 
-cy += 6;
+  doc.text(
+    String(COMPANY.name || "-"),
+    margin + 5,
+    cy
+  );
 
-// Address
-doc.text(String(COMPANY.address || "-"), margin + 5, cy);
+  cy += 6;
 
-cy += 6;
+  doc.text(
+    String(COMPANY.address || "-"),
+    margin + 5,
+    cy
+  );
 
-// City
-doc.text(String(COMPANY.city || "-"), margin + 5, cy);
+  cy += 6;
 
-cy += 6;
+  doc.text(
+    String(COMPANY.city || "-"),
+    margin + 5,
+    cy
+  );
 
-// Phone
-doc.text(`Phone: ${String(COMPANY.phone || "-")}`, margin + 5, cy);
+  cy += 6;
 
-cy += 6;
+  doc.text(
+    `Phone: ${String(
+      COMPANY.phone || "-"
+    )}`,
+    margin + 5,
+    cy
+  );
 
-// Email
-doc.text(`Email: ${String(COMPANY.email || "-")}`, margin + 5, cy);
+  cy += 6;
 
-cy += 6;
+  doc.text(
+    `Email: ${String(
+      COMPANY.email || "-"
+    )}`,
+    margin + 5,
+    cy
+  );
 
-// Website
-doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
+  cy += 6;
+
+  doc.text(
+    `Website: ${String(
+      COMPANY.website || "-"
+    )}`,
+    margin + 5,
+    cy
+  );
 
   /* ===========================================================
      CUSTOMER CARD
   =========================================================== */
 
-  const customerX = pageWidth - 90;
+  const customerX =
+    pageWidth - 90;
 
   heading(doc, 12);
 
@@ -455,7 +741,9 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   let by = y + 12;
 
   doc.text(
-    `Customer : ${value(invoice.customer?.name)}`,
+    `Customer : ${value(
+      customer.name
+    )}`,
     customerX + 5,
     by
   );
@@ -463,7 +751,9 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   by += 7;
 
   doc.text(
-    `Project : ${value(invoice.customer?.project)}`,
+    `Project : ${value(
+      customer.project
+    )}`,
     customerX + 5,
     by
   );
@@ -471,7 +761,9 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   by += 7;
 
   doc.text(
-    `Email : ${value(invoice.customer?.email)}`,
+    `Email : ${value(
+      customer.email
+    )}`,
     customerX + 5,
     by
   );
@@ -479,7 +771,9 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   by += 7;
 
   doc.text(
-    `Phone : ${value(invoice.customer?.phone)}`,
+    `Phone : ${value(
+      customer.phone
+    )}`,
     customerX + 5,
     by
   );
@@ -487,7 +781,9 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   by += 7;
 
   doc.text(
-    `Status : ${value(invoice.status)}`,
+    `Status : ${value(
+      invoice.status
+    )}`,
     customerX + 5,
     by
   );
@@ -496,7 +792,8 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
      STATUS BADGE
   =========================================================== */
 
-  const badge = statusColor(invoice.status);
+  const badge =
+    statusColor(invoice.status);
 
   doc.setFillColor(...badge);
 
@@ -512,7 +809,11 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
 
   doc.setTextColor(255);
 
-  doc.setFont("helvetica", "bold");
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
   doc.setFontSize(9);
 
   doc.text(
@@ -557,7 +858,10 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   normal(doc);
 
   doc.text(
-    formatDate(invoice.invoiceDate),
+    formatDate(
+      invoice.invoiceDate ||
+        invoice.issueDate
+    ),
     margin,
     infoY + 16
   );
@@ -575,526 +879,720 @@ doc.text(`Website: ${String(COMPANY.website || "-")}`, margin + 5, cy);
   );
 
   /* ===========================================================
-   ITEMS TABLE
-=========================================================== */
+     ITEMS TABLE
+  =========================================================== */
 
-const tableRows = (invoice.items || []).map((item, index) => {
-  const qty = Number(item.quantity || 0);
-  const price = Number(item.price || 0);
-  const amount = qty * price;
+  const tableRows =
+    (invoice.items || []).map(
+      (item, index) => {
+        const qty = Number(
+          item.quantity || 0
+        );
 
-  return [
-    index + 1,
-    value(item.description),
-    qty,
-    money(price),
-    money(amount),
-  ];
-});
+        const price = Number(
+          item.price || 0
+        );
 
-autoTable(doc, {
-  startY: 140,
+        const amount =
+          qty * price;
 
-  head: [
-    [
-      "#",
-      "Description",
-      "Qty",
-      "Unit Price",
-      "Amount",
+        return [
+          index + 1,
+          value(item.description),
+          qty,
+          money(price),
+          money(amount),
+        ];
+      }
+    );
+
+  autoTable(doc, {
+    startY: 140,
+
+    head: [
+      [
+        "#",
+        "Description",
+        "Qty",
+        "Unit Price",
+        "Amount",
+      ],
     ],
-  ],
 
-  body: tableRows,
+    body: tableRows,
 
-  theme: "grid",
+    theme: "grid",
 
-  margin: {
-    left: margin,
-    right: margin,
-  },
-
-  styles: {
-    font: "helvetica",
-    fontSize: 9,
-    cellPadding: 4,
-    lineColor: COLORS.border,
-    lineWidth: 0.2,
-    overflow: "linebreak",
-    valign: "middle",
-    textColor: COLORS.dark,
-  },
-
-  headStyles: {
-    fillColor: COLORS.primary,
-    textColor: 255,
-    fontStyle: "bold",
-    halign: "center",
-    valign: "middle",
-    fontSize: 10,
-  },
-
-  alternateRowStyles: {
-    fillColor: [249, 250, 251],
-  },
-
-  columnStyles: {
-    0: {
-      cellWidth: 12,
-      halign: "center",
+    margin: {
+      left: margin,
+      right: margin,
     },
 
-    1: {
-      cellWidth: 78,
-      halign: "left",
+    styles: {
+      font: "helvetica",
+      fontSize: 9,
+      cellPadding: 4,
+      lineColor: COLORS.border,
+      lineWidth: 0.2,
+      overflow: "linebreak",
+      valign: "middle",
+      textColor: COLORS.dark,
     },
 
-    2: {
-      cellWidth: 20,
-      halign: "center",
-    },
+    headStyles: {
+      fillColor:
+        COLORS.primary,
 
-    3: {
-      cellWidth: 35,
-      halign: "right",
-    },
+      textColor: 255,
 
-    4: {
-      cellWidth: 35,
-      halign: "right",
       fontStyle: "bold",
+
+      halign: "center",
+
+      valign: "middle",
+
+      fontSize: 10,
     },
-  },
 
-  didDrawPage(data) {
-    // Draw footer on every page
-    
+    alternateRowStyles: {
+      fillColor: [
+        249,
+        250,
+        251,
+      ],
+    },
 
-    // Draw header again on every page except first
-    if (data.pageNumber > 1) {
-      doc.setFillColor(...COLORS.blue);
-      doc.rect(0, 0, pageWidth, 20, "F");
+    columnStyles: {
+      0: {
+        cellWidth: 12,
+        halign: "center",
+      },
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(255);
+      1: {
+        cellWidth: 78,
+        halign: "left",
+      },
 
+      2: {
+        cellWidth: 20,
+        halign: "center",
+      },
+
+      3: {
+        cellWidth: 35,
+        halign: "right",
+      },
+
+      4: {
+        cellWidth: 35,
+        halign: "right",
+        fontStyle: "bold",
+      },
+    },
+
+    didDrawPage(data) {
+      if (
+        data.pageNumber > 1
+      ) {
+        doc.setFillColor(
+          ...COLORS.blue
+        );
+
+        doc.rect(
+          0,
+          0,
+          pageWidth,
+          20,
+          "F"
+        );
+
+        doc.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        doc.setFontSize(14);
+
+        doc.setTextColor(255);
+
+        doc.text(
+          COMPANY.name,
+          margin,
+          13
+        );
+
+        doc.setFontSize(18);
+
+        doc.text(
+          "INVOICE",
+          pageWidth - margin,
+          13,
+          {
+            align: "right",
+          }
+        );
+      }
+    },
+
+    didParseCell(data) {
+      if (
+        data.section ===
+          "body" &&
+        data.column.index === 1
+      ) {
+        data.cell.styles.minCellHeight =
+          12;
+      }
+    },
+  });
+
+  /* ===========================================================
+     TABLE END POSITION
+  =========================================================== */
+
+  let currentY =
+    doc.lastAutoTable.finalY + 12;
+
+  /* ===========================================================
+     SUMMARY + PAYMENT SECTION
+  =========================================================== */
+
+  if (
+    currentY >
+    pageHeight - 95
+  ) {
+    doc.addPage();
+
+    currentY = 25;
+  }
+
+  const summaryWidth = 72;
+
+  const summaryX =
+    pageWidth -
+    summaryWidth -
+    margin;
+
+  /* ===========================================================
+     SUMMARY CARD
+  =========================================================== */
+
+  doc.setFillColor(
+    250,
+    250,
+    252
+  );
+
+  doc.roundedRect(
+    summaryX,
+    currentY,
+    summaryWidth,
+    58,
+    4,
+    4,
+    "F"
+  );
+
+  doc.setDrawColor(
+    ...COLORS.border
+  );
+
+  doc.roundedRect(
+    summaryX,
+    currentY,
+    summaryWidth,
+    58,
+    4,
+    4
+  );
+
+  heading(doc, 12);
+
+  doc.text(
+    "Invoice Summary",
+    summaryX + 5,
+    currentY + 8
+  );
+
+  normal(doc);
+
+  const summaryRows = [
+    [
+      "Subtotal",
+      money(subtotal),
+    ],
+
+    [
+      "GST",
+      money(gst),
+    ],
+
+    [
+      "Discount",
+      money(discount),
+    ],
+  ];
+
+  let sy =
+    currentY + 18;
+
+  summaryRows.forEach(
+    ([label, amount]) => {
       doc.text(
-        COMPANY.name,
-        margin,
-        13
+        label,
+        summaryX + 5,
+        sy
       );
 
-      doc.setFontSize(18);
-
       doc.text(
-        "INVOICE",
-        pageWidth - margin,
-        13,
+        amount,
+        summaryX +
+          summaryWidth -
+          5,
+        sy,
         {
           align: "right",
         }
       );
+
+      sy += 8;
     }
-  },
+  );
 
-  didParseCell(data) {
-    if (
-      data.section === "body" &&
-      data.column.index === 1
-    ) {
-      data.cell.styles.minCellHeight = 12;
-    }
-  },
-});
+  divider(doc, sy - 3);
 
-/* ===========================================================
-   TABLE END POSITION
-=========================================================== */
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
 
-let currentY = doc.lastAutoTable.finalY + 12;
-/* ===========================================================
-   SUMMARY + PAYMENT SECTION
-=========================================================== */
-
-if (currentY > pageHeight - 95) {
-  doc.addPage();
-  currentY = 25;
-}
-
-const summaryWidth = 72;
-const summaryX = pageWidth - summaryWidth - margin;
-
-/* ---------- SUMMARY CARD ---------- */
-
-doc.setFillColor(250, 250, 252);
-doc.roundedRect(
-  summaryX,
-  currentY,
-  summaryWidth,
-  58,
-  4,
-  4,
-  "F"
-);
-
-doc.setDrawColor(...COLORS.border);
-doc.roundedRect(
-  summaryX,
-  currentY,
-  summaryWidth,
-  58,
-  4,
-  4
-);
-
-heading(doc, 12);
-
-doc.text(
-  "Invoice Summary",
-  summaryX + 5,
-  currentY + 8
-);
-
-normal(doc);
-
-const summaryRows = [
-  ["Subtotal", money(subtotal)],
-  ["GST", money(gst)],
-  ["Discount", money(discount)],
-];
-
-let sy = currentY + 18;
-
-summaryRows.forEach(([label, amount]) => {
-  doc.text(label, summaryX + 5, sy);
+  doc.setFontSize(11);
 
   doc.text(
-    amount,
-    summaryX + summaryWidth - 5,
-    sy,
+    "Grand Total",
+    summaryX + 5,
+    sy + 5
+  );
+
+  doc.text(
+    money(total),
+    summaryX +
+      summaryWidth -
+      5,
+    sy + 5,
     {
       align: "right",
     }
   );
 
-  sy += 8;
-});
+  /* ===========================================================
+     AMOUNT IN WORDS
+  =========================================================== */
 
-divider(doc, sy - 3);
+  normal(doc);
 
-doc.setFont("helvetica", "bold");
-doc.setFontSize(11);
+  const words =
+    amountInWords(total);
 
-doc.text(
-  "Grand Total",
-  summaryX + 5,
-  sy + 5
-);
-
-doc.text(
-  money(total),
-  summaryX + summaryWidth - 5,
-  sy + 5,
-  {
-    align: "right",
-  }
-);
-
-/* ===========================================================
-   AMOUNT IN WORDS
-=========================================================== */
-
-normal(doc);
-
-const words = amountInWords(total);
-
-const wrappedWords = doc.splitTextToSize(
-  words,
-  summaryWidth - 10
-);
-
-doc.text(
-  wrappedWords,
-  summaryX + 5,
-  sy + 14
-);
-
-/* ===========================================================
-   PAYMENT CARD
-=========================================================== */
-
-const paymentWidth = 98;
-
-doc.setFillColor(...COLORS.light);
-
-doc.roundedRect(
-  margin,
-  currentY,
-  paymentWidth,
-  72,
-  4,
-  4,
-  "F"
-);
-
-doc.setDrawColor(...COLORS.border);
-
-doc.roundedRect(
-  margin,
-  currentY,
-  paymentWidth,
-  72,
-  4,
-  4
-);
-
-heading(doc);
-
-doc.text(
-  "Payment Details",
-  margin + 5,
-  currentY + 8
-);
-
-normal(doc);
-
-const paymentInfo = [
-  ["Bank", COMPANY.bankName],
-  ["Account", COMPANY.accountName],
-  ["Account No", COMPANY.accountNumber],
-  ["IFSC", COMPANY.ifsc],
-  ["UPI", COMPANY.upi],
-];
-
-let py = currentY + 18;
-
-paymentInfo.forEach(([label, value]) => {
-  doc.setFont("helvetica", "bold");
+  const wrappedWords =
+    doc.splitTextToSize(
+      words,
+      summaryWidth - 10
+    );
 
   doc.text(
-    `${label}:`,
+    wrappedWords,
+    summaryX + 5,
+    sy + 14
+  );
+
+  /* ===========================================================
+     PAYMENT CARD
+  =========================================================== */
+
+  const paymentWidth = 98;
+
+  doc.setFillColor(
+    ...COLORS.light
+  );
+
+  doc.roundedRect(
+    margin,
+    currentY,
+    paymentWidth,
+    72,
+    4,
+    4,
+    "F"
+  );
+
+  doc.setDrawColor(
+    ...COLORS.border
+  );
+
+  doc.roundedRect(
+    margin,
+    currentY,
+    paymentWidth,
+    72,
+    4,
+    4
+  );
+
+  heading(doc);
+
+  doc.text(
+    "Payment Details",
     margin + 5,
-    py
+    currentY + 8
   );
 
-  doc.setFont("helvetica", "normal");
+  normal(doc);
+
+  const paymentInfo = [
+    [
+      "Bank",
+      COMPANY.bankName,
+    ],
+
+    [
+      "Account",
+      COMPANY.accountName,
+    ],
+
+    [
+      "Account No",
+      COMPANY.accountNumber,
+    ],
+
+    [
+      "IFSC",
+      COMPANY.ifsc,
+    ],
+
+    [
+      "UPI",
+      COMPANY.upi,
+    ],
+  ];
+
+  let py =
+    currentY + 18;
+
+  paymentInfo.forEach(
+    ([label, data]) => {
+      doc.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      doc.text(
+        `${label}:`,
+        margin + 5,
+        py
+      );
+
+      doc.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      doc.text(
+        String(data || "-"),
+        margin + 30,
+        py
+      );
+
+      py += 9;
+    }
+  );
+
+  /* ===========================================================
+     PAYMENT TERMS
+  =========================================================== */
+
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
 
   doc.text(
-    String(value),
-    margin + 30,
-    py
+    "Payment Terms:",
+    margin + 5,
+    py + 2
   );
 
-  py += 9;
-});
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
 
-/* ===========================================================
-   PAYMENT TERMS
-=========================================================== */
+  const paymentTerms =
+    doc.splitTextToSize(
+      value(
+        invoice.paymentTerms
+      ),
+      paymentWidth - 10
+    );
 
-doc.setFont("helvetica", "bold");
+  doc.text(
+    paymentTerms,
+    margin + 5,
+    py + 10
+  );
 
-doc.text(
-  "Payment Terms:",
-  margin + 5,
-  py + 2
-);
+  currentY += 82;
 
-doc.setFont("helvetica", "normal");
+  /* ===========================================================
+     NOTES SECTION
+  =========================================================== */
 
-const paymentTerms = doc.splitTextToSize(
-  value(invoice.paymentTerms),
-  paymentWidth - 10
-);
+  if (
+    currentY >
+    pageHeight - 110
+  ) {
+    doc.addPage();
 
-doc.text(
-  paymentTerms,
-  margin + 5,
-  py + 10
-);
-
-currentY += 82;
-/* ===========================================================
-   NOTES SECTION
-=========================================================== */
-
-if (currentY > pageHeight - 110) {
-  doc.addPage();
-  currentY = 25;
-}
-
-heading(doc, 12);
-doc.text("Notes", margin, currentY);
-
-const notesText = value(invoice.notes);
-
-const wrappedNotes = doc.splitTextToSize(
-  notesText,
-  pageWidth - (margin * 2) - 10
-);
-
-const notesHeight = Math.max(
-  32,
-  wrappedNotes.length * 5 + 12
-);
-
-doc.setFillColor(252,252,252);
-
-doc.roundedRect(
-  margin,
-  currentY + 5,
-  pageWidth - (margin * 2),
-  notesHeight,
-  4,
-  4,
-  "F"
-);
-
-doc.setDrawColor(...COLORS.border);
-
-doc.roundedRect(
-  margin,
-  currentY + 5,
-  pageWidth - (margin * 2),
-  notesHeight,
-  4,
-  4
-);
-
-normal(doc);
-
-doc.text(
-  wrappedNotes,
-  margin + 5,
-  currentY + 14
-);
-
-currentY += notesHeight + 18;
-
-/* ===========================================================
-   TERMS & CONDITIONS
-=========================================================== */
-
-if (currentY > pageHeight - 90) {
-  doc.addPage();
-  currentY = 25;
-}
-
-heading(doc,12);
-
-doc.text(
-  "Terms & Conditions",
-  margin,
-  currentY
-);
-
-normal(doc);
-
-const terms = [
-  "• Payment must be completed according to the agreed payment terms.",
-  "• Please mention the invoice number while making payment.",
-  "• Goods and services once delivered are considered accepted.",
-  "• Late payments may attract additional charges.",
-  "• Thank you for choosing Brandspire Technologies."
-];
-
-let ty = currentY + 8;
-
-terms.forEach((term)=>{
-  doc.text(term, margin + 2, ty);
-  ty += 6;
-});
-
-currentY = ty + 10;
-
-/* ===========================================================
-   SIGNATURE
-=========================================================== */
-
-if (currentY > pageHeight - 60) {
-  doc.addPage();
-  currentY = 25;
-}
-
-doc.setDrawColor(...COLORS.border);
-
-doc.line(
-  pageWidth - 75,
-  currentY + 20,
-  pageWidth - 20,
-  currentY + 20
-);
-
-doc.setFont("helvetica","bold");
-doc.setFontSize(10);
-
-doc.text(
-  "Authorized Signature",
-  pageWidth - 47,
-  currentY + 27,
-  {
-    align:"center"
+    currentY = 25;
   }
-);
 
-/* ===========================================================
-   THANK YOU MESSAGE
-=========================================================== */
+  heading(doc, 12);
 
-doc.setTextColor(...COLORS.primary);
+  doc.text(
+    "Notes",
+    margin,
+    currentY
+  );
 
-doc.setFont("helvetica","bold");
-doc.setFontSize(18);
+  const notesText =
+    value(invoice.notes);
 
-doc.text(
-  "Thank You!",
-  pageWidth / 2,
-  currentY + 45,
-  {
-    align:"center"
+  const wrappedNotes =
+    doc.splitTextToSize(
+      notesText,
+      pageWidth -
+        margin * 2 -
+        10
+    );
+
+  const notesHeight =
+    Math.max(
+      32,
+      wrappedNotes.length *
+        5 +
+        12
+    );
+
+  doc.setFillColor(
+    252,
+    252,
+    252
+  );
+
+  doc.roundedRect(
+    margin,
+    currentY + 5,
+    pageWidth -
+      margin * 2,
+    notesHeight,
+    4,
+    4,
+    "F"
+  );
+
+  doc.setDrawColor(
+    ...COLORS.border
+  );
+
+  doc.roundedRect(
+    margin,
+    currentY + 5,
+    pageWidth -
+      margin * 2,
+    notesHeight,
+    4,
+    4
+  );
+
+  normal(doc);
+
+  doc.text(
+    wrappedNotes,
+    margin + 5,
+    currentY + 14
+  );
+
+  currentY +=
+    notesHeight + 18;
+
+  /* ===========================================================
+     TERMS & CONDITIONS
+  =========================================================== */
+
+  if (
+    currentY >
+    pageHeight - 90
+  ) {
+    doc.addPage();
+
+    currentY = 25;
   }
-);
 
-doc.setFont("helvetica","normal");
-doc.setFontSize(10);
+  heading(doc, 12);
 
-doc.text(
-  "We appreciate your business and look forward to serving you again.",
-  pageWidth / 2,
-  currentY + 53,
-  {
-    align:"center"
+  doc.text(
+    "Terms & Conditions",
+    margin,
+    currentY
+  );
+
+  normal(doc);
+
+  const terms = [
+    "Payment must be completed according to the agreed payment terms.",
+    "Please mention the invoice number while making payment.",
+    "Goods and services once delivered are considered accepted.",
+    "Late payments may attract additional charges.",
+    "Thank you for choosing Brandspire Technologies.",
+  ];
+
+  let ty =
+    currentY + 8;
+
+  terms.forEach(
+    (term, index) => {
+      doc.text(
+        `${index + 1}. ${term}`,
+        margin + 2,
+        ty
+      );
+
+      ty += 6;
+    }
+  );
+
+  currentY =
+    ty + 10;
+
+  /* ===========================================================
+     SIGNATURE
+  =========================================================== */
+
+  if (
+    currentY >
+    pageHeight - 60
+  ) {
+    doc.addPage();
+
+    currentY = 25;
   }
-);
 
-doc.setTextColor(0);
+  doc.setDrawColor(
+    ...COLORS.border
+  );
 
-/* ===========================================================
-   FOOTER
-=========================================================== */
+  doc.line(
+    pageWidth - 75,
+    currentY + 20,
+    pageWidth - 20,
+    currentY + 20
+  );
 
-drawFooter(doc);
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
 
-/* ===========================================================
-   PDF METADATA
-=========================================================== */
+  doc.setFontSize(10);
 
-doc.setProperties({
-  title: `Invoice ${value(invoice.invoiceNumber)}`,
-  subject: "Brandspire Invoice",
-  author: COMPANY.name,
-  creator: "Brandspire CRM",
-  keywords: "invoice, crm, brandspire, pdf",
-});
+  doc.text(
+    "Authorized Signature",
+    pageWidth - 47,
+    currentY + 27,
+    {
+      align: "center",
+    }
+  );
 
-/* ===========================================================
-   SAVE PDF
-=========================================================== */
+  /* ===========================================================
+     THANK YOU MESSAGE
+  =========================================================== */
 
-const filename = `Invoice-${
-  invoice.invoiceNumber || Date.now()
-}.pdf`;
+  doc.setTextColor(
+    ...COLORS.primary
+  );
 
-doc.save(filename);
+  doc.setFont(
+    "helvetica",
+    "bold"
+  );
+
+  doc.setFontSize(18);
+
+  doc.text(
+    "Thank You!",
+    pageWidth / 2,
+    currentY + 45,
+    {
+      align: "center",
+    }
+  );
+
+  doc.setFont(
+    "helvetica",
+    "normal"
+  );
+
+  doc.setFontSize(10);
+
+  doc.text(
+    "We appreciate your business and look forward to serving you again.",
+    pageWidth / 2,
+    currentY + 53,
+    {
+      align: "center",
+    }
+  );
+
+  doc.setTextColor(0);
+
+  /* ===========================================================
+     FOOTER
+  =========================================================== */
+
+  drawFooter(doc);
+
+  /* ===========================================================
+     PDF METADATA
+  =========================================================== */
+
+  doc.setProperties({
+    title: `Invoice ${value(
+      invoice.invoiceNumber
+    )}`,
+
+    subject:
+      "Brandspire Invoice",
+
+    author:
+      COMPANY.name,
+
+    creator:
+      "Brandspire CRM",
+
+    keywords:
+      "invoice, crm, brandspire, pdf",
+  });
+
+  /* ===========================================================
+     SAVE PDF
+  =========================================================== */
+
+  const filename =
+    createFileName(invoice);
+
+  return await savePDF(
+    doc,
+    filename
+  );
 }

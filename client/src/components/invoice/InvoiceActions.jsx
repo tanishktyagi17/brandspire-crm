@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { generateInvoicePDF } from "../../lib/pdfGenerator";
@@ -23,69 +24,196 @@ export default function InvoiceActions({
 }) {
   const navigate = useNavigate();
 
+  const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] =
+    useState(false);
+
   /* ===========================================================
      SAVE / UPDATE
   =========================================================== */
 
   const handleSave = async () => {
-  try {
-    const payload = {
-      ...invoice,
+    if (saving) return;
 
-      issueDate: invoice.invoiceDate,
-      tax: invoice.gst,
-    };
+    try {
+      setSaving(true);
 
-    delete payload._id;
-    delete payload.invoiceDate;
-    delete payload.gst;
+      if (!invoice.customer) {
+        toast.error(
+          "Please select a customer before saving the invoice."
+        );
+        return;
+      }
 
-    if (isEditMode) {
-      await updateInvoice(invoice._id, payload);
+      if (
+        !invoice.items ||
+        invoice.items.length === 0
+      ) {
+        toast.error(
+          "Please add at least one invoice item."
+        );
+        return;
+      }
 
-      toast.success("Invoice updated successfully!");
-    } else {
-      await createInvoice(payload);
+      const payload = {
+        ...invoice,
 
-      toast.success("Invoice created successfully!");
+        customer:
+          typeof invoice.customer === "object"
+            ? invoice.customer?._id
+            : invoice.customer,
+
+        issueDate: invoice.invoiceDate,
+
+        tax: Number(invoice.gst || 0),
+
+        discount: Number(
+          invoice.discount || 0
+        ),
+
+        subtotal: Number(
+          invoice.subtotal || 0
+        ),
+
+        discountAmount: Number(
+          invoice.discountAmount || 0
+        ),
+
+        taxableAmount: Number(
+          invoice.taxableAmount || 0
+        ),
+
+        gstAmount: Number(
+          invoice.gstAmount || 0
+        ),
+
+        total: Number(
+          invoice.total || 0
+        ),
+
+        items: invoice.items.map(
+          (item) => ({
+            description:
+              item.description || "",
+
+            quantity: Number(
+              item.quantity || 0
+            ),
+
+            price: Number(
+              item.price || 0
+            ),
+          })
+        ),
+      };
+
+      /*
+       * These fields belong to the frontend.
+       * Backend uses issueDate and tax.
+       */
+
+      delete payload._id;
+      delete payload.invoiceDate;
+      delete payload.gst;
+      delete payload.createdAt;
+      delete payload.updatedAt;
+      delete payload.__v;
+
+      if (isEditMode) {
+        if (!invoice._id) {
+          throw new Error(
+            "Invoice ID is missing."
+          );
+        }
+
+        await updateInvoice(
+          invoice._id,
+          payload
+        );
+
+        toast.success(
+          "Invoice updated successfully!"
+        );
+      } else {
+        await createInvoice(payload);
+
+        toast.success(
+          "Invoice created successfully!"
+        );
+      }
+
+      navigate("/invoices");
+    } catch (error) {
+      console.error(
+        "Invoice Save Error:",
+        error
+      );
+
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to save invoice."
+      );
+    } finally {
+      setSaving(false);
     }
-
-    navigate("/invoices");
-  } catch (error) {
-    console.error(error);
-
-    toast.error(
-      error.response?.data?.message ||
-        "Failed to save invoice."
-    );
-  }
-};
+  };
 
   /* ===========================================================
      PRINT
   =========================================================== */
 
   const handlePrint = () => {
-    window.print();
+    try {
+      window.print();
+    } catch (error) {
+      console.error(
+        "Invoice Print Error:",
+        error
+      );
+
+      toast.error(
+        "Printing is not available on this device."
+      );
+    }
   };
 
   /* ===========================================================
      DOWNLOAD PDF
   =========================================================== */
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    if (downloading) return;
+
     try {
-      generateInvoicePDF(invoice);
+      setDownloading(true);
+
+      /*
+       * generateInvoicePDF will handle:
+       *
+       * Browser -> normal PDF download
+       * Android -> native Capacitor save/share
+       *
+       * We will update pdfGenerator.js next.
+       */
+
+      await generateInvoicePDF(invoice);
 
       toast.success(
-        "Invoice downloaded successfully."
+        "Invoice PDF generated successfully."
       );
     } catch (error) {
-      console.error(error);
+      console.error(
+        "Invoice PDF Error:",
+        error
+      );
 
       toast.error(
-        "Failed to generate PDF."
+        error.message ||
+          "Failed to generate PDF."
       );
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -98,6 +226,10 @@ export default function InvoiceActions({
       "AI Assist will be available in a future update."
     );
   };
+
+  /* ===========================================================
+     UI
+  =========================================================== */
 
   return (
     <div className="mt-10">
@@ -124,7 +256,10 @@ export default function InvoiceActions({
 
           <div className="grid w-full grid-cols-2 gap-3 lg:flex lg:w-auto lg:flex-wrap">
 
+            {/* Print */}
+
             <button
+              type="button"
               onClick={handlePrint}
               className="
                 flex
@@ -147,8 +282,12 @@ export default function InvoiceActions({
               Print
             </button>
 
+            {/* PDF */}
+
             <button
+              type="button"
               onClick={handleDownload}
+              disabled={downloading}
               className="
                 flex
                 items-center
@@ -164,13 +303,21 @@ export default function InvoiceActions({
                 text-slate-700
                 transition
                 hover:bg-slate-100
+                disabled:cursor-not-allowed
+                disabled:opacity-60
               "
             >
               <Download size={18} />
-              PDF
+
+              {downloading
+                ? "Generating..."
+                : "PDF"}
             </button>
 
+            {/* AI */}
+
             <button
+              type="button"
               onClick={handleAI}
               className="
                 flex
@@ -194,8 +341,12 @@ export default function InvoiceActions({
               AI Assist
             </button>
 
+            {/* Save / Update */}
+
             <button
+              type="button"
               onClick={handleSave}
+              disabled={saving}
               className="
                 flex
                 items-center
@@ -212,17 +363,25 @@ export default function InvoiceActions({
                 shadow-lg
                 transition
                 hover:scale-105
+                disabled:cursor-not-allowed
+                disabled:opacity-60
               "
             >
               {isEditMode ? (
                 <>
                   <Pencil size={18} />
-                  Update
+
+                  {saving
+                    ? "Updating..."
+                    : "Update"}
                 </>
               ) : (
                 <>
                   <Save size={18} />
-                  Save
+
+                  {saving
+                    ? "Saving..."
+                    : "Save"}
                 </>
               )}
             </button>
