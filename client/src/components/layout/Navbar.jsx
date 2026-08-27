@@ -1,10 +1,10 @@
 import {
-  Bell,
   Search,
   Menu,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import NotificationBell from "../notifications/NotificationBell";
 
 export default function Navbar({
   sidebarOpen,
@@ -20,6 +20,7 @@ export default function Navbar({
 
         {/* Mobile Menu */}
         <button
+          type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="rounded-xl p-2 hover:bg-slate-100 lg:hidden"
         >
@@ -60,11 +61,7 @@ export default function Navbar({
         </div>
 
         {/* Notification */}
-        <button className="relative rounded-full p-2 hover:bg-slate-100">
-          <Bell size={22} />
-
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
+        <NotificationBell />
 
         {/* User */}
         <div className="flex items-center gap-3">
@@ -82,11 +79,11 @@ export default function Navbar({
 
           <div className="hidden lg:block">
             <p className="font-semibold text-slate-800">
-              {user?.name}
+              {user?.name || "Admin"}
             </p>
 
             <p className="text-sm text-slate-500">
-              {user?.role}
+              {user?.role || "Employee"}
             </p>
           </div>
 
